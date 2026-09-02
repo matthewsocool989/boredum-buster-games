@@ -12,8 +12,7 @@ const player = {
     height: 60,
     speed: 7,
     alive: true,
-    health: 10,
-    gunLevel: 1 // ⭐ NEW: gun power level
+    health: 10
 };
 
 // Bullets
@@ -29,9 +28,6 @@ let lightningTimer = 0;
 
 // Lightning sound
 let lightningSound = new Audio("lightning.wav");
-
-// Points system ⭐
-let points = 0;
 
 // Enemies
 let enemies = [];
@@ -52,41 +48,18 @@ let keys = {};
 document.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
 document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
 
-// ⭐ Continuous fire (auto-shoot)
-setInterval(() => {
-    if (player.alive) {
-        fireBullets();
+// Shoot
+document.addEventListener("keydown", e => {
+    if (e.key === " ") {
+        bullets.push({
+            x: player.x,
+            y: player.y - 10,
+            width: 6,
+            height: 14,
+            speed: 12
+        });
     }
-}, 200);
-
-// ⭐ Fire bullets based on gun level
-function fireBullets() {
-    const x = player.x;
-    const y = player.y - 20;
-
-    if (player.gunLevel === 1) {
-        bullets.push({ x, y, width: 6, height: 14, speed: 12 });
-    }
-
-    if (player.gunLevel === 2) {
-        bullets.push({ x - 20, y, width: 6, height: 14, speed: 12 });
-        bullets.push({ x + 20, y, width: 6, height: 14, speed: 12 });
-    }
-
-    if (player.gunLevel === 3) {
-        bullets.push({ x, y, width: 6, height: 14, speed: 12 });
-        bullets.push({ x - 25, y, width: 6, height: 14, speed: 12 });
-        bullets.push({ x + 25, y, width: 6, height: 14, speed: 12 });
-    }
-
-    if (player.gunLevel >= 4) {
-        bullets.push({ x, y, width: 6, height: 14, speed: 12 });
-        bullets.push({ x - 30, y, width: 6, height: 14, speed: 12 });
-        bullets.push({ x + 30, y, width: 6, height: 14, speed: 12 });
-        bullets.push({ x - 15, y, width: 6, height: 14, speed: 12 });
-        bullets.push({ x + 15, y, width: 6, height: 14, speed: 12 });
-    }
-}
+});
 
 // Spawn enemies
 function spawnEnemy() {
@@ -98,8 +71,8 @@ function spawnEnemy() {
         height: 50,
         alive: true,
         speed: difficulty.baseSpeed + speedBoost,
-        shootChance: 0.002,
-        bulletSpeed: 4
+        shootChance: 0.002,   // slower shooters
+        bulletSpeed: 4        // slower bullet travel
     });
 }
 
@@ -186,7 +159,6 @@ function update(timestamp) {
                 b.y = -999;
 
                 killCount++;
-                points += 100; // ⭐ POINTS SYSTEM
 
                 // Drop health cube
                 if (Math.random() < 0.3) {
@@ -198,14 +170,9 @@ function update(timestamp) {
                     });
                 }
 
-                // ⭐ Every 10 kills → power up guns
-                if (killCount % 10 === 0) {
-                    player.gunLevel++;
-                    if (player.gunLevel > 4) player.gunLevel = 4;
-                }
-
-                // ⭐ Lightning every 5 kills
-                if (killCount % 5 === 0) {
+                // Lightning auto-attack every 5 kills
+                if (killCount >= 5) {
+                    killCount = 0;
                     lightningTimer = 20;
                     lightningSound.currentTime = 0;
                     lightningSound.play();
@@ -226,11 +193,6 @@ function update(timestamp) {
             b.y + b.height > player.y - player.height / 2) {
 
             player.health -= 1;
-
-            // ⭐ Lose gun power when hit
-            player.gunLevel--;
-            if (player.gunLevel < 1) player.gunLevel = 1;
-
             b.y = canvas.height + 100;
 
             if (player.health <= 0) player.alive = false;
@@ -432,14 +394,6 @@ function draw() {
 
     ctx.fillStyle = "lime";
     ctx.fillRect(20, canvas.height - 40, 20 * player.health, 20);
-
-    // ⭐ Points display
-    ctx.fillStyle = "white";
-    ctx.font = "28px Arial";
-    ctx.fillText("Points: " + points, 20, 40);
-
-    // ⭐ Gun level display
-    ctx.fillText("Gun Level: " + player.gunLevel, 20, 80);
 }
 
 requestAnimationFrame(update);
