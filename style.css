@@ -53,13 +53,14 @@ button:active {
     width: 200px;
 }
 
-/* PARTICLES */
+/* PARTICLES — updated to bright white with glow */
 .particle {
     position: absolute;
-    color: #4CAF50;
-    font-size: 1.2rem;
+    color: #ffffff;
+    font-size: 1.5rem; /* slightly larger for visibility */
     pointer-events: none;
     animation: floatUp 0.8s ease-out forwards;
+    text-shadow: 0 0 8px rgba(255,255,255,0.9); /* glow effect */
 }
 
 @keyframes floatUp {
