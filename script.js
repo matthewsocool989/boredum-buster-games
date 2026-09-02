@@ -1,24 +1,82 @@
 let points = 0;
 let clickPower = 1;
-let upgradeCost = 10;
+
+let clickUpgradeCost = 10;
+let autoClickerCost = 50;
+
+let autoClickers = 0;
 
 const counter = document.getElementById("counter");
 const clickBtn = document.getElementById("clickBtn");
-const upgradeBtn = document.getElementById("upgradeBtn");
-const upgradeCostText = document.getElementById("upgradeCost");
+const clickUpgradeBtn = document.getElementById("upgradeClickBtn");
+const autoClickerBtn = document.getElementById("autoClickerBtn");
 
-clickBtn.onclick = () => {
+const clickUpgradeCostText = document.getElementById("clickUpgradeCost");
+const autoClickerCostText = document.getElementById("autoClickerCost");
+
+// Sounds
+const clickSound = new Audio("click.wav");
+const upgradeSound = new Audio("upgrade.wav");
+
+// Floating +1 particles
+function spawnFloat(x, y, amount) {
+    const float = document.createElement("div");
+    float.className = "float";
+    float.textContent = `+${amount}`;
+    float.style.left = x + "px";
+    float.style.top = y + "px";
+    document.body.appendChild(float);
+
+    setTimeout(() => float.remove(), 800);
+}
+
+// Manual click
+clickBtn.onclick = (e) => {
     points += clickPower;
     counter.textContent = points;
+
+    clickSound.currentTime = 0;
+    clickSound.play();
+
+    spawnFloat(e.clientX, e.clientY, clickPower);
 };
 
-upgradeBtn.onclick = () => {
-    if (points >= upgradeCost) {
-        points -= upgradeCost;
+// Upgrade click power
+clickUpgradeBtn.onclick = () => {
+    if (points >= clickUpgradeCost) {
+        points -= clickUpgradeCost;
         clickPower++;
-        upgradeCost = Math.floor(upgradeCost * 1.5);
+
+        clickUpgradeCost = Math.floor(clickUpgradeCost * 1.5);
 
         counter.textContent = points;
-        upgradeCostText.textContent = upgradeCost;
+        clickUpgradeCostText.textContent = clickUpgradeCost;
+
+        upgradeSound.currentTime = 0;
+        upgradeSound.play();
     }
 };
+
+// Buy auto-clicker
+autoClickerBtn.onclick = () => {
+    if (points >= autoClickerCost) {
+        points -= autoClickerCost;
+        autoClickers++;
+
+        autoClickerCost = Math.floor(autoClickerCost * 1.7);
+
+        counter.textContent = points;
+        autoClickerCostText.textContent = autoClickerCost;
+
+        upgradeSound.currentTime = 0;
+        upgradeSound.play();
+    }
+};
+
+// Auto-clicker loop
+setInterval(() => {
+    if (autoClickers > 0) {
+        points += autoClickers;
+        counter.textContent = points;
+    }
+}, 1000);

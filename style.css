@@ -32,3 +32,17 @@ button:hover {
 .shop {
     margin-top: 40px;
 }
+
+/* Floating +1 particles */
+.float {
+    position: absolute;
+    color: #0f0;
+    font-size: 20px;
+    animation: rise 0.8s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes rise {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-40px); }
+}
