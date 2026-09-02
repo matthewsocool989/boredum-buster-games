@@ -2,16 +2,25 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const scoreEl = document.getElementById("score");
 const restartBtn = document.getElementById("restart");
+const gauge = document.getElementById("gauge");
 
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
 
 let blocks = [];
 let currentBlock = null;
-let speed = 3;
 let direction = 1;
 let gameOver = false;
 let heightScore = 0;
+
+// Difficulty system
+let speed = 1.0;          // starting speed
+const maxSpeed = 2.75;    // maximum speed
+
+function updateGauge() {
+    const percent = (speed / maxSpeed) * 100;
+    gauge.style.width = percent + "%";
+}
 
 function createBaseBlock() {
     const baseWidth = 200;
@@ -40,7 +49,9 @@ function createMovingBlock() {
 function resetGame() {
     gameOver = false;
     heightScore = 0;
-    speed = 3;
+    speed = 1.0;
+    updateGauge();
+
     createBaseBlock();
     createMovingBlock();
     updateScore();
@@ -72,7 +83,11 @@ function dropBlock() {
 
     updateScore();
 
-    speed += 0.2;
+    // Smooth difficulty ramp
+    speed += 0.05;
+    if (speed > maxSpeed) speed = maxSpeed;
+    updateGauge();
+
     createMovingBlock();
 }
 
@@ -136,4 +151,5 @@ restartBtn.addEventListener("click", resetGame);
 
 createBaseBlock();
 createMovingBlock();
+updateGauge();
 loop();
