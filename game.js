@@ -9,10 +9,23 @@ const upgradeBtn = document.getElementById("upgradeBtn");
 const upgradeCostText = document.getElementById("upgradeCost");
 const timerDisplay = document.getElementById("timer");
 
+// Sounds
+const clickSound = document.getElementById("clickSound");
+const upgradeSound = document.getElementById("upgradeSound");
+
+// AUDIO UNLOCK (fixes browser autoplay restrictions)
+document.body.addEventListener("click", () => {
+    clickSound.play().catch(() => {});
+    upgradeSound.play().catch(() => {});
+}, { once: true });
+
 // Click button logic
 clickBtn.onclick = () => {
     points += clickPower;
     counter.textContent = points;
+
+    clickSound.currentTime = 0;
+    clickSound.play();
 };
 
 // Upgrade button logic
@@ -24,6 +37,9 @@ upgradeBtn.onclick = () => {
 
         counter.textContent = points;
         upgradeCostText.textContent = upgradeCost;
+
+        upgradeSound.currentTime = 0;
+        upgradeSound.play();
     }
 };
 
