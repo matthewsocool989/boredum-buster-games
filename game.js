@@ -2,11 +2,16 @@ let points = 0;
 let clickPower = 1;
 let upgradeCost = 10;
 
+let autoClickers = 0;
+let autoClickerCost = 50;
+
 // DOM elements
 const counter = document.getElementById("counter");
 const clickBtn = document.getElementById("clickBtn");
 const upgradeBtn = document.getElementById("upgradeBtn");
+const autoClickerBtn = document.getElementById("autoClickerBtn");
 const upgradeCostText = document.getElementById("upgradeCost");
+const autoClickerCostText = document.getElementById("autoClickerCost");
 const timerDisplay = document.getElementById("timer");
 const particleContainer = document.getElementById("particleContainer");
 
@@ -24,7 +29,7 @@ document.body.addEventListener("click", () => {
     upgradeSound.play().catch(() => {});
 }, { once: true });
 
-// CLICK PARTICLE (updated to use actual mouse position)
+// CLICK PARTICLE
 function spawnParticle(x, y, text) {
     const particle = document.createElement("div");
     particle.classList.add("particle");
@@ -46,7 +51,6 @@ clickBtn.onclick = (e) => {
     clickSound.currentTime = 0;
     clickSound.play();
 
-    // Spawn particle at actual mouse click position
     spawnParticle(e.clientX, e.clientY, `+${clickPower}`);
 };
 
@@ -63,14 +67,48 @@ upgradeBtn.onclick = (e) => {
         upgradeSound.currentTime = 0;
         upgradeSound.play();
 
-        // Flash animation
         upgradeBtn.classList.add("flash");
         setTimeout(() => upgradeBtn.classList.remove("flash"), 300);
 
-        // Particle at mouse position for upgrade too
         spawnParticle(e.clientX, e.clientY, `+UP`);
     }
 };
+
+// AUTO‑CLICKER PURCHASE
+autoClickerBtn.onclick = (e) => {
+    if (points >= autoClickerCost) {
+        points -= autoClickerCost;
+        autoClickers++;
+        autoClickerCost = Math.floor(autoClickerCost * 1.4);
+
+        counter.textContent = points;
+        autoClickerCostText.textContent = autoClickerCost;
+
+        upgradeSound.currentTime = 0;
+        upgradeSound.play();
+
+        autoClickerBtn.classList.add("flash");
+        setTimeout(() => autoClickerBtn.classList.remove("flash"), 300);
+
+        spawnParticle(e.clientX, e.clientY, `+AC`);
+    }
+};
+
+// AUTO‑CLICKER TICK
+setInterval(() => {
+    if (autoClickers > 0) {
+        points += autoClickers;
+        counter.textContent = points;
+
+        // Spawn particle near counter
+        const rect = counter.getBoundingClientRect();
+        spawnParticle(
+            rect.left + rect.width / 2,
+            rect.top,
+            `+${autoClickers}`
+        );
+    }
+}, 1000);
 
 // Timer logic
 let secondsPlayed = 0;
