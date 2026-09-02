@@ -2,42 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Clicker Game</title>
+    <title>Boredom Buster</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Clicker Game</h1>
 
-    <div id="counter">0</div>
-    <div id="timer">Time Played: 0s</div>
+    <h1>Boredom Buster</h1>
+    <p>Select a game</p>
 
-    <button id="clickBtn">Click Me!</button>
+    <div class="grid">
 
-    <div class="shop">
-        <h2>Upgrades</h2>
+        <a class="tile" href="clicker/">
+            <h2>Clicker Game</h2>
+            <p>Tap to earn points</p>
+        </a>
 
-        <button id="upgradeBtn">
-            Upgrade (+1 per click) — Cost: <span id="upgradeCost">10</span>
-        </button>
+        <a class="tile" href="game2/">
+            <h2>Game 2</h2>
+            <p>A new experience</p>
+        </a>
 
-        <button id="autoClickerBtn">
-            Auto‑Clicker (+1/sec) — Cost: <span id="autoClickerCost">50</span>
-        </button>
     </div>
 
-    <!-- Sound Controls -->
-    <div id="soundControls">
-        <button id="muteBtn">🔊 Sound On</button>
-        <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1">
-    </div>
-
-    <!-- Audio files -->
-    <audio id="clickSound" src="click.wav" preload="auto"></audio>
-    <audio id="upgradeSound" src="upgrade.wav" preload="auto"></audio>
-
-    <!-- Particle container -->
-    <div id="particleContainer"></div>
-
-    <script src="game.js"></script>
 </body>
 </html>
