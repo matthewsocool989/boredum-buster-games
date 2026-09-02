@@ -1,69 +1,77 @@
+/* Reset */
 body {
+    margin: 0;
+    padding: 0;
+    background: #000;
     font-family: Arial, sans-serif;
+    color: white;
+}
+
+/* Header */
+header {
     text-align: center;
-    background: #111;
-    color: #fff;
-    padding: 40px 20px;
+    padding: 40px 0;
 }
 
-h1 {
-    font-size: 3rem;
-    margin-bottom: 10px;
+header h1 {
+    font-size: 48px;
+    margin: 0;
+    color: #00eaff;
 }
 
-.tagline {
-    font-size: 1.3rem;
-    color: #ccc;
-    margin-bottom: 40px;
+header p {
+    font-size: 20px;
+    color: #cccccc;
 }
 
-.games-grid {
+/* Game Grid */
+#game-grid {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    padding: 20px;
     gap: 30px;
-    max-width: 1000px;
-    margin: 0 auto;
 }
 
-.game-card {
-    background: #1a1a1a;
-    padding: 25px;
-    width: 260px;
+/* Game Tiles */
+.game-tile {
+    background: #111;
+    border: 2px solid #00eaff;
     border-radius: 12px;
-    box-shadow: 0px 0px 20px rgba(0,255,100,0.2);
+    padding: 20px;
+    width: 260px;
+    text-align: center;
+    transition: 0.2s;
 }
 
-.game-card h2 {
-    margin-bottom: 10px;
+.game-tile:hover {
+    transform: scale(1.05);
+    background: #0a0a0a;
 }
 
-.game-card p {
-    color: #bbb;
+.game-tile h2 {
+    margin: 0 0 10px 0;
+    color: #00eaff;
+}
+
+.game-tile p {
+    color: #cccccc;
+    font-size: 16px;
     margin-bottom: 20px;
 }
 
-/* 3D button */
-.btn3d {
-    padding: 12px 25px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    border: none;
-    border-radius: 10px;
-    background: #4CAF50;
-    color: white;
-    box-shadow: 0px 6px 0px #2e7031;
-    transition: all 0.1s ease;
-    text-decoration: none;
+/* Play Button */
+.play-btn {
     display: inline-block;
+    padding: 12px 25px;
+    background: #00eaff;
+    color: black;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 18px;
+    transition: 0.2s;
 }
 
-.btn3d:active {
-    box-shadow: 0px 2px 0px #2e7031;
-    transform: translateY(4px);
-}
-
-footer {
-    margin-top: 80px;
-    color: #777;
+.play-btn:hover {
+    background: #33f0ff;
 }
