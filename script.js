@@ -53,6 +53,31 @@ function spawnFloat(x, y, amount) {
     setTimeout(() => float.remove(), 800);
 }
 
+// Explosion particles
+function spawnExplosion(x, y) {
+    for (let i = 0; i < 12; i++) {
+        const p = document.createElement("div");
+        p.className = "explosion";
+        p.textContent = "+";
+
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 40 + Math.random() * 30;
+
+        const dx = Math.cos(angle) * distance;
+        const dy = Math.sin(angle) * distance;
+
+        p.style.left = x + "px";
+        p.style.top = y + "px";
+
+        p.style.setProperty("--dx", dx + "px");
+        p.style.setProperty("--dy", dy + "px");
+
+        document.body.appendChild(p);
+
+        setTimeout(() => p.remove(), 600);
+    }
+}
+
 // Manual click
 clickBtn.onclick = (e) => {
     points += clickPower;
@@ -64,10 +89,11 @@ clickBtn.onclick = (e) => {
     }
 
     spawnFloat(e.clientX, e.clientY, clickPower);
+    spawnExplosion(e.clientX, e.clientY);
 };
 
 // Upgrade click power
-clickUpgradeBtn.onclick = () => {
+clickUpgradeBtn.onclick = (e) => {
     if (points >= clickUpgradeCost) {
         points -= clickUpgradeCost;
         clickPower++;
@@ -81,11 +107,13 @@ clickUpgradeBtn.onclick = () => {
             upgradeSound.currentTime = 0;
             upgradeSound.play();
         }
+
+        spawnExplosion(e.clientX, e.clientY);
     }
 };
 
 // Buy auto-clicker
-autoClickerBtn.onclick = () => {
+autoClickerBtn.onclick = (e) => {
     if (points >= autoClickerCost) {
         points -= autoClickerCost;
         autoClickers++;
@@ -99,6 +127,8 @@ autoClickerBtn.onclick = () => {
             upgradeSound.currentTime = 0;
             upgradeSound.play();
         }
+
+        spawnExplosion(e.clientX, e.clientY);
     }
 };
 
