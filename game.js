@@ -24,7 +24,7 @@ document.body.addEventListener("click", () => {
     upgradeSound.play().catch(() => {});
 }, { once: true });
 
-// CLICK PARTICLE
+// CLICK PARTICLE (updated to use actual mouse position)
 function spawnParticle(x, y, text) {
     const particle = document.createElement("div");
     particle.classList.add("particle");
@@ -46,17 +46,12 @@ clickBtn.onclick = (e) => {
     clickSound.currentTime = 0;
     clickSound.play();
 
-    // Spawn +1 particle at click position
-    const rect = clickBtn.getBoundingClientRect();
-    spawnParticle(
-        rect.left + rect.width / 2,
-        rect.top + rect.height / 2,
-        `+${clickPower}`
-    );
+    // Spawn particle at actual mouse click position
+    spawnParticle(e.clientX, e.clientY, `+${clickPower}`);
 };
 
 // Upgrade button logic
-upgradeBtn.onclick = () => {
+upgradeBtn.onclick = (e) => {
     if (points >= upgradeCost) {
         points -= upgradeCost;
         clickPower++;
@@ -71,6 +66,9 @@ upgradeBtn.onclick = () => {
         // Flash animation
         upgradeBtn.classList.add("flash");
         setTimeout(() => upgradeBtn.classList.remove("flash"), 300);
+
+        // Particle at mouse position for upgrade too
+        spawnParticle(e.clientX, e.clientY, `+UP`);
     }
 };
 
