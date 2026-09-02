@@ -6,6 +6,8 @@ let score = 0;
 let powerMode = 0;
 let level = 0;
 
+let ghostDelay = 180; // 3 seconds freeze
+
 let MAP = JSON.parse(JSON.stringify(MAPS[level]));
 
 const player = { r: 1, c: 1, dr: 0, dc: 0 };
@@ -66,9 +68,16 @@ function nextLevel() {
     player.c = 1;
     ghosts[0].r = 7; ghosts[0].c = 7;
     ghosts[1].r = 7; ghosts[1].c = 8;
+
+    ghostDelay = 180;
 }
 
 function moveGhosts() {
+    if (ghostDelay > 0) {
+        ghostDelay--;
+        return;
+    }
+
     ghosts.forEach(g => {
         let best = { r: g.r, c: g.c };
         let bestDist = Infinity;
@@ -149,6 +158,12 @@ function draw() {
     ctx.fillStyle = "#00eaff";
     ctx.fillText("Score: " + score, 10, 610);
     ctx.fillText("Level: " + (level + 1), 480, 610);
+
+    if (ghostDelay > 0) {
+        ctx.fillStyle = "#00eaff";
+        ctx.font = "28px Arial";
+        ctx.fillText("READY!", canvas.width/2 - 60, canvas.height/2);
+    }
 }
 
 function gameLoop() {
