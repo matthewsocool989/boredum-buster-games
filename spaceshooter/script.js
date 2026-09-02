@@ -27,8 +27,9 @@ let healthCubes = [];
 let killCount = 0;
 let lightningTimer = 0;
 
-// Lightning sound
+// Sounds
 let lightningSound = new Audio("lightning.wav");
+let explosionSound = new Audio("explosion.wav");
 
 // Enemies
 let enemies = [];
@@ -51,8 +52,11 @@ let totalKills = 0;
 // Victory flag
 let gameWon = false;
 
-// Fireworks particles
+// Fireworks particles (victory)
 let fireworks = [];
+
+// Explosions (enemy deaths)
+let explosions = [];
 
 // Play Again button
 const playAgainBtn = document.getElementById("playAgainBtn");
@@ -113,7 +117,7 @@ function spawnBackgroundObject() {
     });
 }
 
-// Fireworks
+// Fireworks (victory)
 function spawnFirework() {
     for (let i = 0; i < 40; i++) {
         fireworks.push({
@@ -122,6 +126,23 @@ function spawnFirework() {
             dx: (Math.random() - 0.5) * 10,
             dy: (Math.random() - 0.5) * 10,
             life: 60,
+            color: `hsl(${Math.random() * 360}, 100%, 60%)`
+        });
+    }
+}
+
+// Explosions (enemy death)
+function spawnExplosion(x, y) {
+    explosionSound.currentTime = 0;
+    explosionSound.play();
+
+    for (let i = 0; i < 25; i++) {
+        explosions.push({
+            x,
+            y,
+            dx: (Math.random() - 0.5) * 8,
+            dy: (Math.random() - 0.5) * 8,
+            life: 30,
             color: `hsl(${Math.random() * 360}, 100%, 60%)`
         });
     }
@@ -142,6 +163,14 @@ function update(timestamp) {
             f.life--;
         });
         fireworks = fireworks.filter(f => f.life > 0);
+
+        explosions.forEach(ex => {
+            ex.x += ex.dx;
+            ex.y += ex.dy;
+            ex.life--;
+        });
+        explosions = explosions.filter(ex => ex.life > 0);
+
         draw();
         return;
     }
@@ -196,6 +225,14 @@ function update(timestamp) {
     // Move health cubes
     healthCubes.forEach(c => c.y += 3);
 
+    // Move explosions
+    explosions.forEach(ex => {
+        ex.x += ex.dx;
+        ex.y += ex.dy;
+        ex.life--;
+    });
+    explosions = explosions.filter(ex => ex.life > 0);
+
     // Bullet collision with enemies
     bullets.forEach(b => {
         enemies.forEach(e => {
@@ -207,6 +244,8 @@ function update(timestamp) {
 
                 e.alive = false;
                 b.y = -999;
+
+                spawnExplosion(e.x, e.y);
 
                 killCount++;
                 totalKills++;
@@ -432,6 +471,12 @@ function draw() {
 
         lightningTimer--;
     }
+
+    // Explosions
+    explosions.forEach(ex => {
+        ctx.fillStyle = ex.color;
+        ctx.fillRect(ex.x, ex.y, 4, 4);
+    });
 
     // Victory screen
     if (gameWon) {
