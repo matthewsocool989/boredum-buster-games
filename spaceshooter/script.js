@@ -13,7 +13,7 @@ const player = {
     speed: 7,
     alive: true,
     health: 10,
-    gunLevel: 1
+    gunLevel: 1 // now goes up to 7
 };
 
 // Bullets
@@ -72,7 +72,7 @@ setInterval(() => {
     if (player.alive && !gameWon) fireBullets();
 }, 200);
 
-// Fire bullets based on gun level
+// Fire bullets based on gun level (1–7)
 function fireBullets() {
     const x = player.x;
     const y = player.y - 20;
@@ -81,17 +81,28 @@ function fireBullets() {
         1: [0],
         2: [-20, 20],
         3: [0, -25, 25],
-        4: [0, -30, 30, -15, 15]
+        4: [0, -30, 30, -15, 15],
+        5: [0, -35, 35, -20, 20, -10, 10],
+        6: [0, -40, 40, -25, 25, -15, 15, -5, 5],
+        7: [0, -45, 45, -30, 30, -20, 20, -10, 10]
     };
 
-    patterns[player.gunLevel].forEach(offset => {
-        bullets.push({ x: x + offset, y, width: 6, height: 14, speed: 12 });
+    const offsets = patterns[player.gunLevel] || patterns[1];
+
+    offsets.forEach(offset => {
+        bullets.push({
+            x: x + offset,
+            y,
+            width: 6,
+            height: 14,
+            speed: 12
+        });
     });
 }
 
-// Spawn enemies
+// Spawn enemies (speed increases over time)
 function spawnEnemy() {
-    const speedBoost = difficulty.time * 0.02;
+    const speedBoost = difficulty.time * 0.08; // stronger scaling
     enemies.push({
         x: Math.random() * (canvas.width - 50),
         y: -60,
@@ -99,8 +110,8 @@ function spawnEnemy() {
         height: 50,
         alive: true,
         speed: difficulty.baseSpeed + speedBoost,
-        shootChance: 0.002,
-        bulletSpeed: 4
+        shootChance: 0.002,   // slower shooters
+        bulletSpeed: 4        // slower bullet travel
     });
 }
 
@@ -131,7 +142,7 @@ function spawnFirework() {
     }
 }
 
-// Explosions (enemy death)
+// Explosions (enemy death) — RED
 function spawnExplosion(x, y) {
     explosionSound.currentTime = 0;
     explosionSound.play();
@@ -143,7 +154,7 @@ function spawnExplosion(x, y) {
             dx: (Math.random() - 0.5) * 8,
             dy: (Math.random() - 0.5) * 8,
             life: 30,
-            color: `hsl(${Math.random() * 360}, 100%, 60%)`
+            color: "red"
         });
     }
 }
@@ -156,7 +167,9 @@ function update(timestamp) {
     difficulty.time += delta / 1000;
 
     if (gameWon) {
+        // Victory mode: fireworks + lingering explosions
         spawnFirework();
+
         fireworks.forEach(f => {
             f.x += f.dx;
             f.y += f.dy;
@@ -271,7 +284,7 @@ function update(timestamp) {
                 // Gun upgrade every 10 kills
                 if (totalKills % 10 === 0) {
                     player.gunLevel++;
-                    if (player.gunLevel > 4) player.gunLevel = 4;
+                    if (player.gunLevel > 7) player.gunLevel = 7;
                 }
 
                 // Lightning every 5 kills
@@ -328,7 +341,7 @@ function update(timestamp) {
     requestAnimationFrame(update);
 }
 
-// Draw player ship
+// Draw player ship with style changes per gun level
 function drawPlayer() {
     const x = player.x;
     const y = player.y;
@@ -338,6 +351,7 @@ function drawPlayer() {
     ctx.save();
     ctx.translate(x, y);
 
+    // Base navy body
     ctx.fillStyle = "#0a1a3a";
     ctx.beginPath();
     ctx.moveTo(0, -h / 2);
@@ -349,7 +363,19 @@ function drawPlayer() {
     ctx.closePath();
     ctx.fill();
 
-    ctx.fillStyle = "#0f3b6f";
+    // Trim changes with gun level
+    const trims = [
+        "#0f3b6f",
+        "#1a5b8f",
+        "#2a7bbf",
+        "#3a9bef",
+        "#4acbff",
+        "#5afcff",
+        "#7affff"
+    ];
+    const trimColor = trims[Math.min(player.gunLevel - 1, trims.length - 1)];
+    ctx.fillStyle = trimColor;
+
     ctx.beginPath();
     ctx.moveTo(0, -h / 2 + 6);
     ctx.lineTo(w / 4, -h / 6);
@@ -360,7 +386,19 @@ function drawPlayer() {
     ctx.closePath();
     ctx.fill();
 
-    ctx.fillStyle = "#00eaff";
+    // Cockpit becomes brighter with upgrades
+    const cockpitColors = [
+        "#00eaff",
+        "#33f0ff",
+        "#66f6ff",
+        "#99fbff",
+        "#ccffff",
+        "#e0ffff",
+        "#ffffff"
+    ];
+    const cockpitColor = cockpitColors[Math.min(player.gunLevel - 1, cockpitColors.length - 1)];
+    ctx.fillStyle = cockpitColor;
+
     ctx.beginPath();
     ctx.moveTo(-w / 8, -h / 6);
     ctx.lineTo(w / 8, -h / 6);
@@ -369,9 +407,18 @@ function drawPlayer() {
     ctx.closePath();
     ctx.fill();
 
-    ctx.fillStyle = "#00eaff";
-    ctx.fillRect(-w / 3 - 4, -h / 2, 6, h / 4);
-    ctx.fillRect(w / 3 - 2, -h / 2, 6, h / 4);
+    // Cannons increase with gun level
+    ctx.fillStyle = cockpitColor;
+
+    const baseCannons = [-w / 3 - 4, w / 3 - 2];
+    baseCannons.forEach(offset => {
+        ctx.fillRect(offset, -h / 2, 6, h / 4);
+    });
+
+    if (player.gunLevel >= 4) ctx.fillRect(-10, -h / 2, 6, h / 4);
+    if (player.gunLevel >= 5) ctx.fillRect(10, -h / 2, 6, h / 4);
+    if (player.gunLevel >= 6) ctx.fillRect(-20, -h / 2, 6, h / 4);
+    if (player.gunLevel >= 7) ctx.fillRect(20, -h / 2, 6, h / 4);
 
     ctx.restore();
 }
@@ -472,7 +519,7 @@ function draw() {
         lightningTimer--;
     }
 
-    // Explosions
+    // Explosions (red)
     explosions.forEach(ex => {
         ctx.fillStyle = ex.color;
         ctx.fillRect(ex.x, ex.y, 4, 4);
