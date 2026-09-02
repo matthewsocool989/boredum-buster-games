@@ -3,6 +3,7 @@ body {
     text-align: center;
     background: #111;
     color: #fff;
+    overflow-x: hidden;
 }
 
 h1 {
@@ -29,7 +30,7 @@ button {
     border-radius: 10px;
     background: #4CAF50;
     color: white;
-    transition: transform 0.1s ease;
+    transition: transform 0.1s ease, box-shadow 0.2s ease;
 }
 
 button:hover {
@@ -37,7 +38,7 @@ button:hover {
 }
 
 button:active {
-    transform: scale(0.95);
+    transform: scale(0.92);
 }
 
 .shop {
@@ -50,4 +51,28 @@ button:active {
 
 #volumeSlider {
     width: 200px;
+}
+
+/* PARTICLES */
+.particle {
+    position: absolute;
+    color: #4CAF50;
+    font-size: 1.2rem;
+    pointer-events: none;
+    animation: floatUp 0.8s ease-out forwards;
+}
+
+@keyframes floatUp {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-40px); }
+}
+
+/* Upgrade flash */
+.flash {
+    animation: flashEffect 0.3s ease-out;
+}
+
+@keyframes flashEffect {
+    0% { box-shadow: 0 0 20px #4CAF50; }
+    100% { box-shadow: none; }
 }

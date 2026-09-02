@@ -8,6 +8,7 @@ const clickBtn = document.getElementById("clickBtn");
 const upgradeBtn = document.getElementById("upgradeBtn");
 const upgradeCostText = document.getElementById("upgradeCost");
 const timerDisplay = document.getElementById("timer");
+const particleContainer = document.getElementById("particleContainer");
 
 // Sound elements
 const clickSound = document.getElementById("clickSound");
@@ -17,19 +18,41 @@ const upgradeSound = document.getElementById("upgradeSound");
 const muteBtn = document.getElementById("muteBtn");
 const volumeSlider = document.getElementById("volumeSlider");
 
-// AUDIO UNLOCK (fixes browser autoplay restrictions)
+// AUDIO UNLOCK
 document.body.addEventListener("click", () => {
     clickSound.play().catch(() => {});
     upgradeSound.play().catch(() => {});
 }, { once: true });
 
+// CLICK PARTICLE
+function spawnParticle(x, y, text) {
+    const particle = document.createElement("div");
+    particle.classList.add("particle");
+    particle.textContent = text;
+
+    particle.style.left = `${x}px`;
+    particle.style.top = `${y}px`;
+
+    particleContainer.appendChild(particle);
+
+    setTimeout(() => particle.remove(), 800);
+}
+
 // Click button logic
-clickBtn.onclick = () => {
+clickBtn.onclick = (e) => {
     points += clickPower;
     counter.textContent = points;
 
     clickSound.currentTime = 0;
     clickSound.play();
+
+    // Spawn +1 particle at click position
+    const rect = clickBtn.getBoundingClientRect();
+    spawnParticle(
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2,
+        `+${clickPower}`
+    );
 };
 
 // Upgrade button logic
@@ -44,6 +67,10 @@ upgradeBtn.onclick = () => {
 
         upgradeSound.currentTime = 0;
         upgradeSound.play();
+
+        // Flash animation
+        upgradeBtn.classList.add("flash");
+        setTimeout(() => upgradeBtn.classList.remove("flash"), 300);
     }
 };
 
