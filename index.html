@@ -20,7 +20,13 @@
         </button>
     </div>
 
-    <!-- Audio files (WAV or MP3 both work) -->
+    <!-- Sound Controls -->
+    <div id="soundControls">
+        <button id="muteBtn">🔊 Sound On</button>
+        <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1">
+    </div>
+
+    <!-- Audio files -->
     <audio id="clickSound" src="click.wav" preload="auto"></audio>
     <audio id="upgradeSound" src="upgrade.wav" preload="auto"></audio>
 

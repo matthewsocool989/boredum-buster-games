@@ -9,9 +9,13 @@ const upgradeBtn = document.getElementById("upgradeBtn");
 const upgradeCostText = document.getElementById("upgradeCost");
 const timerDisplay = document.getElementById("timer");
 
-// Sounds
+// Sound elements
 const clickSound = document.getElementById("clickSound");
 const upgradeSound = document.getElementById("upgradeSound");
+
+// Sound controls
+const muteBtn = document.getElementById("muteBtn");
+const volumeSlider = document.getElementById("volumeSlider");
 
 // AUDIO UNLOCK (fixes browser autoplay restrictions)
 document.body.addEventListener("click", () => {
@@ -54,3 +58,21 @@ setInterval(() => {
 
     timerDisplay.textContent = `Time Played: ${minutes}m ${seconds}s`;
 }, 1000);
+
+// MUTE BUTTON
+let isMuted = false;
+
+muteBtn.onclick = () => {
+    isMuted = !isMuted;
+
+    clickSound.muted = isMuted;
+    upgradeSound.muted = isMuted;
+
+    muteBtn.textContent = isMuted ? "🔇 Sound Off" : "🔊 Sound On";
+};
+
+// VOLUME SLIDER
+volumeSlider.oninput = () => {
+    clickSound.volume = volumeSlider.value;
+    upgradeSound.volume = volumeSlider.value;
+};

@@ -43,3 +43,11 @@ button:active {
 .shop {
     margin-top: 40px;
 }
+
+#soundControls {
+    margin-top: 30px;
+}
+
+#volumeSlider {
+    width: 200px;
+}
