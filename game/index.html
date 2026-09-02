@@ -2,37 +2,29 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Boredum Buster Clicker</title>
+    <title>Clicker Game</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h1>Boredum Buster Clicker</h1>
+    <h1>Clicker Game</h1>
 
     <div id="counter">0</div>
-    <div id="totalClicksDisplay">Total Clicks: 0</div>
 
-    <button id="clickBtn" class="btn3d">Click Me!</button>
+    <button id="clickBtn">Click Me!</button>
 
     <div class="shop">
         <h2>Upgrades</h2>
 
-        <button id="upgradeClickBtn" class="btn3d">
-            Increase Click Power (+1) — Cost: <span id="clickUpgradeCost">10</span>
+        <button id="upgradeBtn">
+            +1 Click Power — Cost: <span id="upgradeCost">10</span>
         </button>
 
-        <button id="autoClickerBtn" class="btn3d">
-            Buy Auto‑Clicker (+1/sec) — Cost: <span id="autoClickerCost">50</span>
+        <button id="autoBtn">
+            Auto‑Clicker — Cost: <span id="autoCost">50</span>
         </button>
     </div>
 
-    <div class="audio-controls">
-        <button id="muteBtn" class="btn3d">Mute</button>
-
-        <label for="volumeSlider">Volume</label>
-        <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1">
-    </div>
-
-    <script src="script.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>
