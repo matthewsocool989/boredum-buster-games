@@ -4,12 +4,12 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// Player
+// Player (medium fighter)
 const player = {
     x: canvas.width / 2,
-    y: canvas.height - 120,
-    width: 50,
-    height: 50,
+    y: canvas.height - 150,
+    width: 60,
+    height: 60,
     speed: 7,
     alive: true,
     health: 3,
@@ -30,6 +30,17 @@ let specialReady = true;
 // Enemies
 let enemies = [];
 
+// Background objects
+let backgroundObjects = [];
+
+// Difficulty scaling
+let difficulty = {
+    time: 0,
+    baseSpeed: 1.5,
+    spawnInterval: 1000,
+    lastSpawn: 0
+};
+
 // Controls
 let keys = {};
 document.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
@@ -39,10 +50,11 @@ document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
 document.addEventListener("keydown", e => {
     if (e.key === " ") {
         bullets.push({
-            x: player.x + player.width / 2 - 5,
-            y: player.y,
-            width: 5,
-            height: 10
+            x: player.x,
+            y: player.y - 10,
+            width: 6,
+            height: 14,
+            speed: 12
         });
     }
 });
@@ -60,73 +72,115 @@ document.addEventListener("keydown", e => {
     }
 });
 
-// Spawn enemies randomly
-setInterval(() => {
+// Spawn enemies based on difficulty
+function spawnEnemy() {
+    const speedBoost = difficulty.time * 0.02;
     enemies.push({
-        x: Math.random() * (canvas.width - 40),
-        y: -40,
-        width: 40,
-        height: 40,
+        x: Math.random() * (canvas.width - 50),
+        y: -60,
+        width: 50,
+        height: 50,
         alive: true,
-        speed: 3 + Math.random() * 2
+        speed: difficulty.baseSpeed + speedBoost,
+        shootChance: 0.005 + difficulty.time * 0.0005
     });
-}, 700);
+}
+
+// Spawn background objects
+function spawnBackgroundObject() {
+    const types = ["planet", "asteroid", "monster", "nebula"];
+    const type = types[Math.floor(Math.random() * types.length)];
+    backgroundObjects.push({
+        x: Math.random() * canvas.width,
+        y: -200,
+        type,
+        speed: 0.5 + Math.random() * 1.5,
+        size: 40 + Math.random() * 80
+    });
+}
 
 // Game loop
-function update() {
-    if (!player.alive) return;
+let lastTime = performance.now();
+function update(timestamp) {
+    const delta = timestamp - lastTime;
+    lastTime = timestamp;
+    difficulty.time += delta / 1000;
+
+    if (!player.alive) {
+        draw();
+        return;
+    }
 
     // WASD movement
-    if (keys["a"] && player.x > 0) player.x -= player.speed;
-    if (keys["d"] && player.x + player.width < canvas.width) player.x += player.speed;
-    if (keys["w"] && player.y > 0) player.y -= player.speed;
-    if (keys["s"] && player.y + player.height < canvas.height) player.y += player.speed;
+    if (keys["a"] && player.x - player.width / 2 > 0) player.x -= player.speed;
+    if (keys["d"] && player.x + player.width / 2 < canvas.width) player.x += player.speed;
+    if (keys["w"] && player.y - player.height / 2 > 0) player.y -= player.speed;
+    if (keys["s"] && player.y + player.height / 2 < canvas.height) player.y += player.speed;
+
+    // Spawn enemies over time
+    if (timestamp - difficulty.lastSpawn > difficulty.spawnInterval) {
+        spawnEnemy();
+        difficulty.lastSpawn = timestamp;
+        if (difficulty.spawnInterval > 400) difficulty.spawnInterval -= 10; // faster spawns over time
+    }
+
+    // Occasionally spawn background objects
+    if (Math.random() < 0.01) {
+        spawnBackgroundObject();
+    }
 
     // Move bullets
-    bullets.forEach(b => b.y -= 10);
+    bullets.forEach(b => b.y -= b.speed);
 
     // Move enemy bullets
-    enemyBullets.forEach(b => b.y += 6);
+    enemyBullets.forEach(b => b.y += b.speed);
 
-    // Move enemies downward
+    // Move enemies
     enemies.forEach(e => {
         if (e.alive) {
             e.y += e.speed;
 
             // Enemy shooting
-            if (Math.random() < 0.01) {
+            if (Math.random() < e.shootChance) {
                 enemyBullets.push({
-                    x: e.x + e.width / 2,
-                    y: e.y + e.height,
-                    width: 5,
-                    height: 10
+                    x: e.x,
+                    y: e.y + e.height / 2,
+                    width: 6,
+                    height: 14,
+                    speed: 7
                 });
             }
         }
     });
 
+    // Move background objects
+    backgroundObjects.forEach(o => {
+        o.y += o.speed;
+    });
+
     // Spawn power-ups
-    if (Math.random() < 0.005) {
+    if (Math.random() < 0.004) {
         powerUps.push({
             x: Math.random() * canvas.width,
             y: -20,
-            width: 20,
-            height: 20,
-            type: "shield"
+            width: 24,
+            height: 24,
+            type: "shield",
+            speed: 3
         });
     }
 
     // Move power-ups
-    powerUps.forEach(p => p.y += 3);
+    powerUps.forEach(p => p.y += p.speed);
 
     // Bullet collision with enemies
     bullets.forEach(b => {
         enemies.forEach(e => {
             if (e.alive &&
-                b.x < e.x + e.width &&
-                b.x + b.width > e.x &&
-                b.y < e.y + e.height &&
-                b.y + b.height > e.y) {
+                b.x < e.x + e.width / 2 &&
+                b.x + b.width > e.x - e.width / 2 &&
+                b.y < e.y + e.height / 2 &&
+                b.y + b.height > e.y - e.height / 2) {
                 e.alive = false;
                 b.y = -999;
             }
@@ -135,10 +189,10 @@ function update() {
 
     // Enemy bullet collision with player
     enemyBullets.forEach(b => {
-        if (b.x < player.x + player.width &&
-            b.x + b.width > player.x &&
-            b.y < player.y + player.height &&
-            b.y + b.height > player.y) {
+        if (b.x < player.x + player.width / 2 &&
+            b.x + b.width > player.x - player.width / 2 &&
+            b.y < player.y + player.height / 2 &&
+            b.y + b.height > player.y - player.height / 2) {
 
             if (!player.shield) {
                 player.health--;
@@ -154,10 +208,10 @@ function update() {
 
     // Power-up pickup
     powerUps.forEach(p => {
-        if (p.x < player.x + player.width &&
-            p.x + p.width > player.x &&
-            p.y < player.y + player.height &&
-            p.y + p.height > player.y) {
+        if (p.x < player.x + player.width / 2 &&
+            p.x + p.width > player.x - player.width / 2 &&
+            p.y < player.y + player.height / 2 &&
+            p.y + p.height > player.y - player.height / 2) {
 
             if (p.type === "shield") {
                 player.shield = true;
@@ -178,20 +232,181 @@ function update() {
     requestAnimationFrame(update);
 }
 
+// Draw player ship (angular twin-engine)
+function drawPlayer() {
+    const x = player.x;
+    const y = player.y;
+    const w = player.width;
+    const h = player.height;
+
+    // Body
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Main fuselage
+    ctx.fillStyle = "#0a1a3a"; // deep navy
+    ctx.beginPath();
+    ctx.moveTo(0, -h / 2);              // nose
+    ctx.lineTo(w / 3, -h / 4);
+    ctx.lineTo(w / 2, h / 4);
+    ctx.lineTo(0, h / 2);
+    ctx.lineTo(-w / 2, h / 4);
+    ctx.lineTo(-w / 3, -h / 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Trim
+    ctx.fillStyle = "#0f3b6f";
+    ctx.beginPath();
+    ctx.moveTo(0, -h / 2 + 6);
+    ctx.lineTo(w / 4, -h / 6);
+    ctx.lineTo(w / 3, h / 6);
+    ctx.lineTo(0, h / 2 - 6);
+    ctx.lineTo(-w / 3, h / 6);
+    ctx.lineTo(-w / 4, -h / 6);
+    ctx.closePath();
+    ctx.fill();
+
+    // Cockpit
+    ctx.fillStyle = "#00eaff";
+    ctx.beginPath();
+    ctx.moveTo(-w / 8, -h / 6);
+    ctx.lineTo(w / 8, -h / 6);
+    ctx.lineTo(w / 6, 0);
+    ctx.lineTo(-w / 6, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // Twin forward cannons
+    ctx.fillStyle = "#00eaff";
+    ctx.fillRect(-w / 3 - 4, -h / 2, 6, h / 4);
+    ctx.fillRect(w / 3 - 2, -h / 2, 6, h / 4);
+
+    // Rear engines
+    ctx.fillStyle = "#00eaff";
+    ctx.beginPath();
+    ctx.moveTo(-w / 3, h / 2);
+    ctx.lineTo(-w / 4, h / 2 + 10);
+    ctx.lineTo(-w / 5, h / 2);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(w / 3, h / 2);
+    ctx.lineTo(w / 4, h / 2 + 10);
+    ctx.lineTo(w / 5, h / 2);
+    ctx.closePath();
+    ctx.fill();
+
+    // Shield outline
+    if (player.shield) {
+        ctx.strokeStyle = "#00eaff";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(0, -h / 2 - 8);
+        ctx.lineTo(w / 2 + 8, 0);
+        ctx.lineTo(0, h / 2 + 8);
+        ctx.lineTo(-w / 2 - 8, 0);
+        ctx.closePath();
+        ctx.stroke();
+    }
+
+    ctx.restore();
+}
+
+// Draw enemy (angular alien)
+function drawEnemy(e) {
+    ctx.save();
+    ctx.translate(e.x, e.y);
+
+    const w = e.width;
+    const h = e.height;
+
+    ctx.fillStyle = "#3b0f6f";
+    ctx.beginPath();
+    ctx.moveTo(0, -h / 2);
+    ctx.lineTo(w / 2, -h / 4);
+    ctx.lineTo(w / 3, h / 2);
+    ctx.lineTo(-w / 3, h / 2);
+    ctx.lineTo(-w / 2, -h / 4);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "#ff0066";
+    ctx.beginPath();
+    ctx.arc(0, 0, h / 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#00ff99";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-w / 2, -h / 4);
+    ctx.lineTo(-w / 3, h / 2);
+    ctx.moveTo(w / 2, -h / 4);
+    ctx.lineTo(w / 3, h / 2);
+    ctx.stroke();
+
+    ctx.restore();
+}
+
+// Draw background objects
+function drawBackgroundObject(o) {
+    ctx.save();
+    ctx.translate(o.x, o.y);
+
+    switch (o.type) {
+        case "planet":
+            ctx.fillStyle = "#223366";
+            ctx.beginPath();
+            ctx.arc(0, 0, o.size / 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#00eaff";
+            ctx.beginPath();
+            ctx.arc(0, 0, o.size / 2 + 6, 0, Math.PI * 2);
+            ctx.stroke();
+            break;
+        case "asteroid":
+            ctx.fillStyle = "#555555";
+            ctx.beginPath();
+            ctx.moveTo(-o.size / 3, -o.size / 4);
+            ctx.lineTo(o.size / 4, -o.size / 3);
+            ctx.lineTo(o.size / 3, o.size / 5);
+            ctx.lineTo(-o.size / 4, o.size / 3);
+            ctx.closePath();
+            ctx.fill();
+            break;
+        case "monster":
+            ctx.fillStyle = "#330022";
+            ctx.beginPath();
+            ctx.arc(0, 0, o.size / 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#ff0000";
+            ctx.beginPath();
+            ctx.arc(-o.size / 8, -o.size / 10, o.size / 12, 0, Math.PI * 2);
+            ctx.arc(o.size / 8, -o.size / 10, o.size / 12, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+        case "nebula":
+            ctx.fillStyle = "rgba(0, 150, 255, 0.2)";
+            ctx.beginPath();
+            ctx.arc(0, 0, o.size / 2, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+    }
+
+    ctx.restore();
+}
+
 // Draw everything
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Background objects
+    backgroundObjects.forEach(o => drawBackgroundObject(o));
+
     // Player
     if (player.alive) {
-        ctx.fillStyle = "cyan";
-        ctx.fillRect(player.x, player.y, player.width, player.height);
-
-        if (player.shield) {
-            ctx.strokeStyle = "cyan";
-            ctx.lineWidth = 4;
-            ctx.strokeRect(player.x - 5, player.y - 5, player.width + 10, player.height + 10);
-        }
+        drawPlayer();
     } else {
         ctx.fillStyle = "red";
         ctx.font = "60px Arial";
@@ -200,22 +415,21 @@ function draw() {
     }
 
     // Bullets
-    ctx.fillStyle = "yellow";
-    bullets.forEach(b => ctx.fillRect(b.x, b.y, b.width, b.height));
+    ctx.fillStyle = "#ffff66";
+    bullets.forEach(b => ctx.fillRect(b.x - b.width / 2, b.y, b.width, b.height));
 
     // Enemy bullets
-    ctx.fillStyle = "red";
-    enemyBullets.forEach(b => ctx.fillRect(b.x, b.y, b.width, b.height));
+    ctx.fillStyle = "#ff4444";
+    enemyBullets.forEach(b => ctx.fillRect(b.x - b.width / 2, b.y, b.width, b.height));
 
     // Enemies
-    ctx.fillStyle = "lime";
     enemies.forEach(e => {
-        if (e.alive) ctx.fillRect(e.x, e.y, e.width, e.height);
+        if (e.alive) drawEnemy(e);
     });
 
     // Power-ups
-    ctx.fillStyle = "cyan";
-    powerUps.forEach(p => ctx.fillRect(p.x, p.y, p.width, p.height));
+    ctx.fillStyle = "#00eaff";
+    powerUps.forEach(p => ctx.fillRect(p.x - p.width / 2, p.y - p.height / 2, p.width, p.height));
 
     // Health bar
     ctx.fillStyle = "red";
@@ -225,12 +439,12 @@ function draw() {
     ctx.fillRect(20, canvas.height - 40, 50 * player.health, 20);
 
     // Special attack indicator
-    ctx.fillStyle = specialReady ? "cyan" : "gray";
-    ctx.fillRect(canvas.width - 120, canvas.height - 40, 100, 20);
+    ctx.fillStyle = specialReady ? "#00eaff" : "gray";
+    ctx.fillRect(canvas.width - 140, canvas.height - 40, 120, 20);
 
     ctx.fillStyle = "white";
     ctx.font = "16px Arial";
-    ctx.fillText("SPECIAL", canvas.width - 110, canvas.height - 25);
+    ctx.fillText("SPECIAL", canvas.width - 120, canvas.height - 25);
 }
 
-update();
+requestAnimationFrame(update);
