@@ -1,0 +1,10 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    background: black;
+}
+
+#gameCanvas {
+    display: block;
+    background: radial-gradient(circle at center, #000020, #000000);
+}

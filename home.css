@@ -3,7 +3,7 @@ body {
     text-align: center;
     background: #111;
     color: #fff;
-    padding-top: 80px;
+    padding: 40px 20px;
 }
 
 h1 {
@@ -17,10 +17,36 @@ h1 {
     margin-bottom: 40px;
 }
 
+.games-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.game-card {
+    background: #1a1a1a;
+    padding: 25px;
+    width: 260px;
+    border-radius: 12px;
+    box-shadow: 0px 0px 20px rgba(0,255,100,0.2);
+}
+
+.game-card h2 {
+    margin-bottom: 10px;
+}
+
+.game-card p {
+    color: #bbb;
+    margin-bottom: 20px;
+}
+
+/* 3D button */
 .btn3d {
-    padding: 15px 30px;
-    font-size: 1.2rem;
-    margin: 10px;
+    padding: 12px 25px;
+    font-size: 1.1rem;
     cursor: pointer;
     border: none;
     border-radius: 10px;
