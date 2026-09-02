@@ -8,3 +8,18 @@ body {
     display: block;
     background: radial-gradient(circle at center, #000020, #000000);
 }
+
+#playAgainBtn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px 40px;
+    font-size: 28px;
+    background: #00eaff;
+    border: none;
+    border-radius: 10px;
+    color: black;
+    display: none;
+    cursor: pointer;
+}

@@ -4,7 +4,7 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// Player (medium fighter)
+// Player
 const player = {
     x: canvas.width / 2,
     y: canvas.height - 150,
@@ -13,7 +13,7 @@ const player = {
     speed: 7,
     alive: true,
     health: 10,
-    gunLevel: 1 // gun power level
+    gunLevel: 1
 };
 
 // Bullets
@@ -44,20 +44,28 @@ let difficulty = {
     lastSpawn: 0
 };
 
-// Points + total kills
+// Points + kills
 let points = 0;
 let totalKills = 0;
+
+// Victory flag
+let gameWon = false;
+
+// Fireworks particles
+let fireworks = [];
+
+// Play Again button
+const playAgainBtn = document.getElementById("playAgainBtn");
+playAgainBtn.onclick = () => location.reload();
 
 // Controls
 let keys = {};
 document.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
 document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
 
-// CONTINUOUS FIRE (no spacebar needed)
+// Continuous fire
 setInterval(() => {
-    if (player.alive) {
-        fireBullets();
-    }
+    if (player.alive && !gameWon) fireBullets();
 }, 200);
 
 // Fire bullets based on gun level
@@ -65,22 +73,16 @@ function fireBullets() {
     const x = player.x;
     const y = player.y - 20;
 
-    if (player.gunLevel === 1) {
-        bullets.push({ x, y, width: 6, height: 14, speed: 12 });
-    } else if (player.gunLevel === 2) {
-        bullets.push({ x: x - 20, y, width: 6, height: 14, speed: 12 });
-        bullets.push({ x: x + 20, y, width: 6, height: 14, speed: 12 });
-    } else if (player.gunLevel === 3) {
-        bullets.push({ x, y, width: 6, height: 14, speed: 12 });
-        bullets.push({ x: x - 25, y, width: 6, height: 14, speed: 12 });
-        bullets.push({ x: x + 25, y, width: 6, height: 14, speed: 12 });
-    } else {
-        bullets.push({ x, y, width: 6, height: 14, speed: 12 });
-        bullets.push({ x: x - 30, y, width: 6, height: 14, speed: 12 });
-        bullets.push({ x: x + 30, y, width: 6, height: 14, speed: 12 });
-        bullets.push({ x: x - 15, y, width: 6, height: 14, speed: 12 });
-        bullets.push({ x: x + 15, y, width: 6, height: 14, speed: 12 });
-    }
+    const patterns = {
+        1: [0],
+        2: [-20, 20],
+        3: [0, -25, 25],
+        4: [0, -30, 30, -15, 15]
+    };
+
+    patterns[player.gunLevel].forEach(offset => {
+        bullets.push({ x: x + offset, y, width: 6, height: 14, speed: 12 });
+    });
 }
 
 // Spawn enemies
@@ -93,8 +95,8 @@ function spawnEnemy() {
         height: 50,
         alive: true,
         speed: difficulty.baseSpeed + speedBoost,
-        shootChance: 0.002,   // slower shooters
-        bulletSpeed: 4        // slower bullet travel
+        shootChance: 0.002,
+        bulletSpeed: 4
     });
 }
 
@@ -111,6 +113,20 @@ function spawnBackgroundObject() {
     });
 }
 
+// Fireworks
+function spawnFirework() {
+    for (let i = 0; i < 40; i++) {
+        fireworks.push({
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            dx: (Math.random() - 0.5) * 10,
+            dy: (Math.random() - 0.5) * 10,
+            life: 60,
+            color: `hsl(${Math.random() * 360}, 100%, 60%)`
+        });
+    }
+}
+
 // Game loop
 let lastTime = performance.now();
 function update(timestamp) {
@@ -118,12 +134,24 @@ function update(timestamp) {
     lastTime = timestamp;
     difficulty.time += delta / 1000;
 
+    if (gameWon) {
+        spawnFirework();
+        fireworks.forEach(f => {
+            f.x += f.dx;
+            f.y += f.dy;
+            f.life--;
+        });
+        fireworks = fireworks.filter(f => f.life > 0);
+        draw();
+        return;
+    }
+
     if (!player.alive) {
         draw();
         return;
     }
 
-    // WASD movement
+    // Movement
     if (keys["a"] && player.x - player.width / 2 > 0) player.x -= player.speed;
     if (keys["d"] && player.x + player.width / 2 < canvas.width) player.x += player.speed;
     if (keys["w"] && player.y - player.height / 2 > 0) player.y -= player.speed;
@@ -184,6 +212,13 @@ function update(timestamp) {
                 totalKills++;
                 points += 100;
 
+                // Victory at 10,000 points
+                if (points >= 10000) {
+                    gameWon = true;
+                    player.alive = false;
+                    playAgainBtn.style.display = "block";
+                }
+
                 // Drop health cube
                 if (Math.random() < 0.3) {
                     healthCubes.push({
@@ -194,13 +229,13 @@ function update(timestamp) {
                     });
                 }
 
-                // Power up guns every 10 total kills
+                // Gun upgrade every 10 kills
                 if (totalKills % 10 === 0) {
                     player.gunLevel++;
                     if (player.gunLevel > 4) player.gunLevel = 4;
                 }
 
-                // Lightning auto-attack every 5 kills
+                // Lightning every 5 kills
                 if (killCount >= 5) {
                     killCount = 0;
                     lightningTimer = 20;
@@ -224,7 +259,7 @@ function update(timestamp) {
 
             player.health -= 1;
 
-            // Lose gun level and reset position
+            // Lose gun level + reset position
             player.gunLevel--;
             if (player.gunLevel < 1) player.gunLevel = 1;
             player.x = canvas.width / 2;
@@ -396,6 +431,20 @@ function draw() {
         }
 
         lightningTimer--;
+    }
+
+    // Victory screen
+    if (gameWon) {
+        ctx.fillStyle = "white";
+        ctx.font = "80px Arial";
+        ctx.fillText("VICTORY!", canvas.width / 2 - 200, canvas.height / 2 - 40);
+
+        fireworks.forEach(f => {
+            ctx.fillStyle = f.color;
+            ctx.fillRect(f.x, f.y, 4, 4);
+        });
+
+        return;
     }
 
     // Player
