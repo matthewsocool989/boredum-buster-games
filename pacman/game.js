@@ -4,10 +4,13 @@ const ctx = canvas.getContext("2d");
 const TILE = 40;
 let score = 0;
 let powerMode = 0;
+let level = 0;
 
-const player = { r: 7, c: 7, dr: 0, dc: 0 };
+let MAP = JSON.parse(JSON.stringify(MAPS[level]));
+
+const player = { r: 1, c: 1, dr: 0, dc: 0 };
 const ghosts = [
-    { r: 7, c: 6, color: "red" },
+    { r: 7, c: 7, color: "red" },
     { r: 7, c: 8, color: "pink" }
 ];
 
@@ -42,6 +45,27 @@ function movePlayer() {
             powerMode = 300;
         }
     }
+}
+
+function pelletsLeft() {
+    for (let r = 0; r < MAP.length; r++)
+        for (let c = 0; c < MAP[r].length; c++)
+            if (MAP[r][c] === 2 || MAP[r][c] === 3) return true;
+    return false;
+}
+
+function nextLevel() {
+    level++;
+    if (level >= MAPS.length) {
+        window.location.href = "victory.html";
+        return;
+    }
+
+    MAP = JSON.parse(JSON.stringify(MAPS[level]));
+    player.r = 1;
+    player.c = 1;
+    ghosts[0].r = 7; ghosts[0].c = 7;
+    ghosts[1].r = 7; ghosts[1].c = 8;
 }
 
 function moveGhosts() {
@@ -87,7 +111,6 @@ function moveGhosts() {
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // draw map
     for (let r = 0; r < MAP.length; r++) {
         for (let c = 0; c < MAP[r].length; c++) {
             const tile = MAP[r][c];
@@ -111,13 +134,11 @@ function draw() {
         }
     }
 
-    // draw player
     ctx.fillStyle = "yellow";
     ctx.beginPath();
     ctx.arc(player.c*TILE+20, player.r*TILE+20, 18, 0, Math.PI*2);
     ctx.fill();
 
-    // draw ghosts
     ghosts.forEach(g => {
         ctx.fillStyle = powerMode > 0 ? "blue" : g.color;
         ctx.beginPath();
@@ -127,6 +148,7 @@ function draw() {
 
     ctx.fillStyle = "#00eaff";
     ctx.fillText("Score: " + score, 10, 610);
+    ctx.fillText("Level: " + (level + 1), 480, 610);
 }
 
 function gameLoop() {
@@ -134,6 +156,7 @@ function gameLoop() {
     moveGhosts();
     draw();
 
+    if (!pelletsLeft()) nextLevel();
     if (powerMode > 0) powerMode--;
 
     requestAnimationFrame(gameLoop);
