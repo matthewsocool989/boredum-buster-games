@@ -1,5 +1,6 @@
 let points = 0;
 let clickPower = 1;
+let totalClicks = 0;
 
 let clickUpgradeCost = 10;
 let autoClickerCost = 50;
@@ -7,10 +8,12 @@ let autoClickerCost = 50;
 let autoClickers = 0;
 
 // Crit settings
-const critChance = 0.10;      // 10% chance
-const critMultiplier = 10;    // 10x clickPower
+const critChance = 0.10;
+const critMultiplier = 10;
 
 const counter = document.getElementById("counter");
+const totalClicksDisplay = document.getElementById("totalClicksDisplay");
+
 const clickBtn = document.getElementById("clickBtn");
 const clickUpgradeBtn = document.getElementById("upgradeClickBtn");
 const autoClickerBtn = document.getElementById("autoClickerBtn");
@@ -28,7 +31,7 @@ let muted = false;
 const clickSound = new Audio("click.wav");
 const upgradeSound = new Audio("upgrade.wav");
 
-// Apply volume slider changes
+// Volume slider
 volumeSlider.oninput = () => {
     const vol = volumeSlider.value;
     clickSound.volume = vol;
@@ -38,10 +41,8 @@ volumeSlider.oninput = () => {
 // Mute toggle
 muteBtn.onclick = () => {
     muted = !muted;
-
     clickSound.muted = muted;
     upgradeSound.muted = muted;
-
     muteBtn.textContent = muted ? "Unmute" : "Mute";
 };
 
@@ -53,7 +54,6 @@ function spawnFloat(x, y, amount) {
     float.style.left = x + "px";
     float.style.top = y + "px";
     document.body.appendChild(float);
-
     setTimeout(() => float.remove(), 800);
 }
 
@@ -65,7 +65,6 @@ function spawnCritText(x, y, amount) {
     crit.style.left = x + "px";
     crit.style.top = y + "px";
     document.body.appendChild(crit);
-
     setTimeout(() => crit.remove(), 1000);
 }
 
@@ -92,16 +91,49 @@ function spawnExplosion(x, y, isCrit = false) {
         p.style.setProperty("--dy", dy + "px");
 
         document.body.appendChild(p);
-
         setTimeout(() => p.remove(), 600);
+    }
+}
+
+// Confetti burst every 1000 clicks
+function spawnConfetti() {
+    for (let i = 0; i < 40; i++) {
+        const c = document.createElement("div");
+        c.className = "confetti";
+
+        // Random color
+        const colors = ["#ff3333", "#33ff33", "#3333ff", "#ffff33", "#ff33ff", "#33ffff"];
+        c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 100 + Math.random() * 80;
+
+        const dx = Math.cos(angle) * distance;
+        const dy = Math.sin(angle) * distance;
+
+        c.style.left = window.innerWidth / 2 + "px";
+        c.style.top = window.innerHeight / 2 + "px";
+
+        c.style.setProperty("--dx", dx + "px");
+        c.style.setProperty("--dy", dy + "px");
+
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 1000);
     }
 }
 
 // Manual click
 clickBtn.onclick = (e) => {
-    let isCrit = Math.random() < critChance;
+    totalClicks++;
+    totalClicksDisplay.textContent = `Total Clicks: ${totalClicks}`;
 
+    if (totalClicks % 1000 === 0) {
+        spawnConfetti();
+    }
+
+    let isCrit = Math.random() < critChance;
     let gain = isCrit ? clickPower * critMultiplier : clickPower;
+
     points += gain;
     counter.textContent = points;
 
