@@ -1,0 +1,19 @@
+body {
+    background: #000;
+    color: #00eaff;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    margin-bottom: 10px;
+    text-shadow: 0 0 15px #00eaff;
+}
+
+canvas {
+    background: linear-gradient(#4ec0ca, #1a7fa3);
+    border: 3px solid #00eaff;
+    box-shadow: 0 0 20px #00eaff;
+}
