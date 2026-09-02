@@ -12,18 +12,22 @@ const player = {
     height: 60,
     speed: 7,
     alive: true,
-    health: 10,          // ⭐ HEALTH LASTS LONGER
+    health: 10
 };
 
 // Bullets
 let bullets = [];
 let enemyBullets = [];
 
-// Power-ups (health cubes)
+// Health cubes
 let healthCubes = [];
 
-// Special attack (lightning auto-trigger)
+// Lightning auto-attack
 let killCount = 0;
+let lightningTimer = 0;
+
+// Lightning sound
+let lightningSound = new Audio("lightning.wav");
 
 // Enemies
 let enemies = [];
@@ -57,7 +61,7 @@ document.addEventListener("keydown", e => {
     }
 });
 
-// Spawn enemies based on difficulty
+// Spawn enemies
 function spawnEnemy() {
     const speedBoost = difficulty.time * 0.02;
     enemies.push({
@@ -67,12 +71,12 @@ function spawnEnemy() {
         height: 50,
         alive: true,
         speed: difficulty.baseSpeed + speedBoost,
-        shootChance: 0.002,     // ⭐ SLOWER SHOOTERS
-        bulletSpeed: 4          // ⭐ SLOWER BULLET TRAVEL
+        shootChance: 0.002,   // slower shooters
+        bulletSpeed: 4        // slower bullet travel
     });
 }
 
-// Spawn background objects
+// Background objects
 function spawnBackgroundObject() {
     const types = ["planet", "asteroid", "monster", "nebula"];
     const type = types[Math.floor(Math.random() * types.length)];
@@ -103,17 +107,15 @@ function update(timestamp) {
     if (keys["w"] && player.y - player.height / 2 > 0) player.y -= player.speed;
     if (keys["s"] && player.y + player.height / 2 < canvas.height) player.y += player.speed;
 
-    // Spawn enemies over time
+    // Spawn enemies
     if (timestamp - difficulty.lastSpawn > difficulty.spawnInterval) {
         spawnEnemy();
         difficulty.lastSpawn = timestamp;
         if (difficulty.spawnInterval > 400) difficulty.spawnInterval -= 10;
     }
 
-    // Occasionally spawn background objects
-    if (Math.random() < 0.01) {
-        spawnBackgroundObject();
-    }
+    // Background objects
+    if (Math.random() < 0.01) spawnBackgroundObject();
 
     // Move bullets
     bullets.forEach(b => b.y -= b.speed);
@@ -126,7 +128,6 @@ function update(timestamp) {
         if (e.alive) {
             e.y += e.speed;
 
-            // Enemy shooting (slower)
             if (Math.random() < e.shootChance) {
                 enemyBullets.push({
                     x: e.x,
@@ -140,9 +141,7 @@ function update(timestamp) {
     });
 
     // Move background objects
-    backgroundObjects.forEach(o => {
-        o.y += o.speed;
-    });
+    backgroundObjects.forEach(o => o.y += o.speed);
 
     // Move health cubes
     healthCubes.forEach(c => c.y += 3);
@@ -161,7 +160,7 @@ function update(timestamp) {
 
                 killCount++;
 
-                // ⭐ Drop health cube sometimes
+                // Drop health cube
                 if (Math.random() < 0.3) {
                     healthCubes.push({
                         x: e.x,
@@ -171,35 +170,32 @@ function update(timestamp) {
                     });
                 }
 
-                // ⭐ Lightning auto-attack every 5 kills
+                // Lightning auto-attack every 5 kills
                 if (killCount >= 5) {
                     killCount = 0;
+                    lightningTimer = 20;
+                    lightningSound.currentTime = 0;
+                    lightningSound.play();
+
                     enemies.forEach(enemy => {
-                        if (enemy.alive &&
-                            Math.abs(enemy.x - player.x) < 200 &&
-                            Math.abs(enemy.y - player.y) < 200) {
-                            enemy.alive = false;
-                        }
+                        if (enemy.alive) enemy.alive = false;
                     });
                 }
             }
         });
     });
 
-    // Enemy bullet collision with player
+    // Enemy bullet collision
     enemyBullets.forEach(b => {
         if (b.x < player.x + player.width / 2 &&
             b.x + b.width > player.x - player.width / 2 &&
             b.y < player.y + player.height / 2 &&
             b.y + b.height > player.y - player.height / 2) {
 
-            player.health -= 1;   // ⭐ HEALTH REDUCES SLOWER
-
+            player.health -= 1;
             b.y = canvas.height + 100;
 
-            if (player.health <= 0) {
-                player.alive = false;
-            }
+            if (player.health <= 0) player.alive = false;
         }
     });
 
@@ -210,7 +206,7 @@ function update(timestamp) {
             c.y < player.y + player.height / 2 &&
             c.y + c.height > player.y - player.height / 2) {
 
-            player.health += 2;   // ⭐ HEALTH PICKUP
+            player.health += 2;
             if (player.health > 10) player.health = 10;
 
             c.y = canvas.height + 100;
@@ -221,7 +217,7 @@ function update(timestamp) {
     requestAnimationFrame(update);
 }
 
-// Draw player ship (angular twin-engine)
+// Draw player ship
 function drawPlayer() {
     const x = player.x;
     const y = player.y;
@@ -231,7 +227,6 @@ function drawPlayer() {
     ctx.save();
     ctx.translate(x, y);
 
-    // Main fuselage
     ctx.fillStyle = "#0a1a3a";
     ctx.beginPath();
     ctx.moveTo(0, -h / 2);
@@ -243,7 +238,6 @@ function drawPlayer() {
     ctx.closePath();
     ctx.fill();
 
-    // Trim
     ctx.fillStyle = "#0f3b6f";
     ctx.beginPath();
     ctx.moveTo(0, -h / 2 + 6);
@@ -255,7 +249,6 @@ function drawPlayer() {
     ctx.closePath();
     ctx.fill();
 
-    // Cockpit
     ctx.fillStyle = "#00eaff";
     ctx.beginPath();
     ctx.moveTo(-w / 8, -h / 6);
@@ -265,7 +258,6 @@ function drawPlayer() {
     ctx.closePath();
     ctx.fill();
 
-    // Cannons
     ctx.fillStyle = "#00eaff";
     ctx.fillRect(-w / 3 - 4, -h / 2, 6, h / 4);
     ctx.fillRect(w / 3 - 2, -h / 2, 6, h / 4);
@@ -273,7 +265,7 @@ function drawPlayer() {
     ctx.restore();
 }
 
-// Draw enemy (angular alien)
+// Draw enemy
 function drawEnemy(e) {
     ctx.save();
     ctx.translate(e.x, e.y);
@@ -299,7 +291,7 @@ function drawEnemy(e) {
     ctx.restore();
 }
 
-// Draw background objects
+// Background objects
 function drawBackgroundObject(o) {
     ctx.save();
     ctx.translate(o.x, o.y);
@@ -342,8 +334,32 @@ function drawBackgroundObject(o) {
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Lightning flash
+    if (lightningTimer > 0) {
+        ctx.fillStyle = "rgba(0, 200, 255, 0.15)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
     // Background objects
     backgroundObjects.forEach(o => drawBackgroundObject(o));
+
+    // Lightning bolts
+    if (lightningTimer > 0) {
+        ctx.strokeStyle = "#00eaff";
+        ctx.lineWidth = 4;
+
+        for (let i = 0; i < 6; i++) {
+            ctx.beginPath();
+            ctx.moveTo(player.x, player.y);
+            ctx.lineTo(
+                player.x + (Math.random() * 600 - 300),
+                player.y - (Math.random() * 400)
+            );
+            ctx.stroke();
+        }
+
+        lightningTimer--;
+    }
 
     // Player
     if (player.alive) {
