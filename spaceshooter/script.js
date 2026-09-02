@@ -7,7 +7,7 @@ canvas.height = window.innerHeight;
 // Player
 const player = {
     x: canvas.width / 2,
-    y: canvas.height - 80,
+    y: canvas.height - 120,
     width: 50,
     height: 50,
     speed: 7,
@@ -29,26 +29,11 @@ let specialReady = true;
 
 // Enemies
 let enemies = [];
-const enemyRows = 3;
-const enemyCols = 8;
-
-// Create enemies
-for (let r = 0; r < enemyRows; r++) {
-    for (let c = 0; c < enemyCols; c++) {
-        enemies.push({
-            x: 100 + c * 100,
-            y: 50 + r * 80,
-            width: 40,
-            height: 40,
-            alive: true
-        });
-    }
-}
 
 // Controls
 let keys = {};
-document.addEventListener("keydown", e => keys[e.key] = true);
-document.addEventListener("keyup", e => keys[e.key] = false);
+document.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
+document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
 
 // Shoot
 document.addEventListener("keydown", e => {
@@ -75,13 +60,27 @@ document.addEventListener("keydown", e => {
     }
 });
 
+// Spawn enemies randomly
+setInterval(() => {
+    enemies.push({
+        x: Math.random() * (canvas.width - 40),
+        y: -40,
+        width: 40,
+        height: 40,
+        alive: true,
+        speed: 3 + Math.random() * 2
+    });
+}, 700);
+
 // Game loop
 function update() {
     if (!player.alive) return;
 
-    // Move player
-    if (keys["ArrowLeft"] && player.x > 0) player.x -= player.speed;
-    if (keys["ArrowRight"] && player.x + player.width < canvas.width) player.x += player.speed;
+    // WASD movement
+    if (keys["a"] && player.x > 0) player.x -= player.speed;
+    if (keys["d"] && player.x + player.width < canvas.width) player.x += player.speed;
+    if (keys["w"] && player.y > 0) player.y -= player.speed;
+    if (keys["s"] && player.y + player.height < canvas.height) player.y += player.speed;
 
     // Move bullets
     bullets.forEach(b => b.y -= 10);
@@ -89,18 +88,22 @@ function update() {
     // Move enemy bullets
     enemyBullets.forEach(b => b.y += 6);
 
-    // Enemy shooting
-    if (Math.random() < 0.02) {
-        let shooter = enemies[Math.floor(Math.random() * enemies.length)];
-        if (shooter && shooter.alive) {
-            enemyBullets.push({
-                x: shooter.x + shooter.width / 2,
-                y: shooter.y + shooter.height,
-                width: 5,
-                height: 10
-            });
+    // Move enemies downward
+    enemies.forEach(e => {
+        if (e.alive) {
+            e.y += e.speed;
+
+            // Enemy shooting
+            if (Math.random() < 0.01) {
+                enemyBullets.push({
+                    x: e.x + e.width / 2,
+                    y: e.y + e.height,
+                    width: 5,
+                    height: 10
+                });
+            }
         }
-    }
+    });
 
     // Spawn power-ups
     if (Math.random() < 0.005) {
