@@ -11,12 +11,21 @@ const player = {
     width: 50,
     height: 50,
     speed: 7,
-    alive: true
+    alive: true,
+    health: 3,
+    shield: false,
+    shieldTimer: 0
 };
 
 // Bullets
 let bullets = [];
 let enemyBullets = [];
+
+// Power-ups
+let powerUps = [];
+
+// Special attack
+let specialReady = true;
 
 // Enemies
 let enemies = [];
@@ -53,6 +62,19 @@ document.addEventListener("keydown", e => {
     }
 });
 
+// Special attack (Shift)
+document.addEventListener("keydown", e => {
+    if (e.key === "Shift" && specialReady) {
+        specialReady = false;
+
+        enemies.forEach(e => {
+            if (e.alive) e.alive = false;
+        });
+
+        setTimeout(() => specialReady = true, 5000);
+    }
+});
+
 // Game loop
 function update() {
     if (!player.alive) return;
@@ -80,6 +102,20 @@ function update() {
         }
     }
 
+    // Spawn power-ups
+    if (Math.random() < 0.005) {
+        powerUps.push({
+            x: Math.random() * canvas.width,
+            y: -20,
+            width: 20,
+            height: 20,
+            type: "shield"
+        });
+    }
+
+    // Move power-ups
+    powerUps.forEach(p => p.y += 3);
+
     // Bullet collision with enemies
     bullets.forEach(b => {
         enemies.forEach(e => {
@@ -89,7 +125,7 @@ function update() {
                 b.y < e.y + e.height &&
                 b.y + b.height > e.y) {
                 e.alive = false;
-                b.y = -999; // remove bullet
+                b.y = -999;
             }
         });
     });
@@ -100,9 +136,40 @@ function update() {
             b.x + b.width > player.x &&
             b.y < player.y + player.height &&
             b.y + b.height > player.y) {
-            player.alive = false;
+
+            if (!player.shield) {
+                player.health--;
+            }
+
+            b.y = canvas.height + 100;
+
+            if (player.health <= 0) {
+                player.alive = false;
+            }
         }
     });
+
+    // Power-up pickup
+    powerUps.forEach(p => {
+        if (p.x < player.x + player.width &&
+            p.x + p.width > player.x &&
+            p.y < player.y + player.height &&
+            p.y + p.height > player.y) {
+
+            if (p.type === "shield") {
+                player.shield = true;
+                player.shieldTimer = 300;
+            }
+
+            p.y = canvas.height + 100;
+        }
+    });
+
+    // Shield timer
+    if (player.shield) {
+        player.shieldTimer--;
+        if (player.shieldTimer <= 0) player.shield = false;
+    }
 
     draw();
     requestAnimationFrame(update);
@@ -116,6 +183,12 @@ function draw() {
     if (player.alive) {
         ctx.fillStyle = "cyan";
         ctx.fillRect(player.x, player.y, player.width, player.height);
+
+        if (player.shield) {
+            ctx.strokeStyle = "cyan";
+            ctx.lineWidth = 4;
+            ctx.strokeRect(player.x - 5, player.y - 5, player.width + 10, player.height + 10);
+        }
     } else {
         ctx.fillStyle = "red";
         ctx.font = "60px Arial";
@@ -136,6 +209,25 @@ function draw() {
     enemies.forEach(e => {
         if (e.alive) ctx.fillRect(e.x, e.y, e.width, e.height);
     });
+
+    // Power-ups
+    ctx.fillStyle = "cyan";
+    powerUps.forEach(p => ctx.fillRect(p.x, p.y, p.width, p.height));
+
+    // Health bar
+    ctx.fillStyle = "red";
+    ctx.fillRect(20, canvas.height - 40, 150, 20);
+
+    ctx.fillStyle = "lime";
+    ctx.fillRect(20, canvas.height - 40, 50 * player.health, 20);
+
+    // Special attack indicator
+    ctx.fillStyle = specialReady ? "cyan" : "gray";
+    ctx.fillRect(canvas.width - 120, canvas.height - 40, 100, 20);
+
+    ctx.fillStyle = "white";
+    ctx.font = "16px Arial";
+    ctx.fillText("SPECIAL", canvas.width - 110, canvas.height - 25);
 }
 
 update();
