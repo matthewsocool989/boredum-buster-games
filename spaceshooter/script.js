@@ -12,7 +12,8 @@ const player = {
     height: 60,
     speed: 7,
     alive: true,
-    health: 10
+    health: 10,
+    gunLevel: 1 // gun power level
 };
 
 // Bullets
@@ -43,23 +44,44 @@ let difficulty = {
     lastSpawn: 0
 };
 
+// Points + total kills
+let points = 0;
+let totalKills = 0;
+
 // Controls
 let keys = {};
 document.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
 document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
 
-// Shoot
-document.addEventListener("keydown", e => {
-    if (e.key === " ") {
-        bullets.push({
-            x: player.x,
-            y: player.y - 10,
-            width: 6,
-            height: 14,
-            speed: 12
-        });
+// CONTINUOUS FIRE (no spacebar needed)
+setInterval(() => {
+    if (player.alive) {
+        fireBullets();
     }
-});
+}, 200);
+
+// Fire bullets based on gun level
+function fireBullets() {
+    const x = player.x;
+    const y = player.y - 20;
+
+    if (player.gunLevel === 1) {
+        bullets.push({ x, y, width: 6, height: 14, speed: 12 });
+    } else if (player.gunLevel === 2) {
+        bullets.push({ x: x - 20, y, width: 6, height: 14, speed: 12 });
+        bullets.push({ x: x + 20, y, width: 6, height: 14, speed: 12 });
+    } else if (player.gunLevel === 3) {
+        bullets.push({ x, y, width: 6, height: 14, speed: 12 });
+        bullets.push({ x: x - 25, y, width: 6, height: 14, speed: 12 });
+        bullets.push({ x: x + 25, y, width: 6, height: 14, speed: 12 });
+    } else {
+        bullets.push({ x, y, width: 6, height: 14, speed: 12 });
+        bullets.push({ x: x - 30, y, width: 6, height: 14, speed: 12 });
+        bullets.push({ x: x + 30, y, width: 6, height: 14, speed: 12 });
+        bullets.push({ x: x - 15, y, width: 6, height: 14, speed: 12 });
+        bullets.push({ x: x + 15, y, width: 6, height: 14, speed: 12 });
+    }
+}
 
 // Spawn enemies
 function spawnEnemy() {
@@ -159,6 +181,8 @@ function update(timestamp) {
                 b.y = -999;
 
                 killCount++;
+                totalKills++;
+                points += 100;
 
                 // Drop health cube
                 if (Math.random() < 0.3) {
@@ -168,6 +192,12 @@ function update(timestamp) {
                         width: 20,
                         height: 20
                     });
+                }
+
+                // Power up guns every 10 total kills
+                if (totalKills % 10 === 0) {
+                    player.gunLevel++;
+                    if (player.gunLevel > 4) player.gunLevel = 4;
                 }
 
                 // Lightning auto-attack every 5 kills
@@ -193,6 +223,13 @@ function update(timestamp) {
             b.y + b.height > player.y - player.height / 2) {
 
             player.health -= 1;
+
+            // Lose gun level and reset position
+            player.gunLevel--;
+            if (player.gunLevel < 1) player.gunLevel = 1;
+            player.x = canvas.width / 2;
+            player.y = canvas.height - 150;
+
             b.y = canvas.height + 100;
 
             if (player.health <= 0) player.alive = false;
@@ -394,6 +431,12 @@ function draw() {
 
     ctx.fillStyle = "lime";
     ctx.fillRect(20, canvas.height - 40, 20 * player.health, 20);
+
+    // Points + gun level display
+    ctx.fillStyle = "white";
+    ctx.font = "24px Arial";
+    ctx.fillText("Points: " + points, 20, 40);
+    ctx.fillText("Gun Level: " + player.gunLevel, 20, 70);
 }
 
 requestAnimationFrame(update);
