@@ -51,6 +51,16 @@ h1 {
     to { opacity: 0; transform: translateY(-40px); }
 }
 
+/* Crit text */
+.crit {
+    position: absolute;
+    color: #ff3333;
+    font-size: 32px;
+    font-weight: bold;
+    animation: rise 1s ease-out forwards;
+    pointer-events: none;
+}
+
 /* Explosion particles */
 .explosion {
     position: absolute;
@@ -59,6 +69,11 @@ h1 {
     color: #0f0;
     opacity: 1;
     animation: explode 0.6s ease-out forwards;
+}
+
+.explosion.critParticle {
+    color: #ff3333;
+    font-size: 26px;
 }
 
 @keyframes explode {

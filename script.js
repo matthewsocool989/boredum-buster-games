@@ -6,6 +6,10 @@ let autoClickerCost = 50;
 
 let autoClickers = 0;
 
+// Crit settings
+const critChance = 0.10;      // 10% chance
+const critMultiplier = 10;    // 10x clickPower
+
 const counter = document.getElementById("counter");
 const clickBtn = document.getElementById("clickBtn");
 const clickUpgradeBtn = document.getElementById("upgradeClickBtn");
@@ -53,15 +57,30 @@ function spawnFloat(x, y, amount) {
     setTimeout(() => float.remove(), 800);
 }
 
+// Crit text
+function spawnCritText(x, y, amount) {
+    const crit = document.createElement("div");
+    crit.className = "crit";
+    crit.textContent = `CRIT +${amount}`;
+    crit.style.left = x + "px";
+    crit.style.top = y + "px";
+    document.body.appendChild(crit);
+
+    setTimeout(() => crit.remove(), 1000);
+}
+
 // Explosion particles
-function spawnExplosion(x, y) {
-    for (let i = 0; i < 12; i++) {
+function spawnExplosion(x, y, isCrit = false) {
+    const count = isCrit ? 20 : 12;
+
+    for (let i = 0; i < count; i++) {
         const p = document.createElement("div");
         p.className = "explosion";
+        if (isCrit) p.classList.add("critParticle");
         p.textContent = "+";
 
         const angle = Math.random() * Math.PI * 2;
-        const distance = 40 + Math.random() * 30;
+        const distance = (isCrit ? 60 : 40) + Math.random() * 30;
 
         const dx = Math.cos(angle) * distance;
         const dy = Math.sin(angle) * distance;
@@ -80,16 +99,28 @@ function spawnExplosion(x, y) {
 
 // Manual click
 clickBtn.onclick = (e) => {
-    points += clickPower;
+    let isCrit = Math.random() < critChance;
+
+    let gain = isCrit ? clickPower * critMultiplier : clickPower;
+    points += gain;
     counter.textContent = points;
 
     if (!muted) {
         clickSound.currentTime = 0;
         clickSound.play();
+        if (isCrit) {
+            upgradeSound.currentTime = 0;
+            upgradeSound.play();
+        }
     }
 
-    spawnFloat(e.clientX, e.clientY, clickPower);
-    spawnExplosion(e.clientX, e.clientY);
+    if (isCrit) {
+        spawnCritText(e.clientX, e.clientY, gain);
+        spawnExplosion(e.clientX, e.clientY, true);
+    } else {
+        spawnFloat(e.clientX, e.clientY, clickPower);
+        spawnExplosion(e.clientX, e.clientY, false);
+    }
 };
 
 // Upgrade click power
