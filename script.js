@@ -14,9 +14,37 @@ const autoClickerBtn = document.getElementById("autoClickerBtn");
 const clickUpgradeCostText = document.getElementById("clickUpgradeCost");
 const autoClickerCostText = document.getElementById("autoClickerCost");
 
+// Audio controls
+const muteBtn = document.getElementById("muteBtn");
+const volumeSlider = document.getElementById("volumeSlider");
+
+let muted = false;
+
 // Sounds
 const clickSound = new Audio("click.wav");
 const upgradeSound = new Audio("upgrade.wav");
+
+// Apply volume slider changes
+volumeSlider.oninput = () => {
+    const vol = volumeSlider.value;
+    clickSound.volume = vol;
+    upgradeSound.volume = vol;
+};
+
+// Mute toggle
+muteBtn.onclick = () => {
+    muted = !muted;
+
+    if (muted) {
+        clickSound.muted = true;
+        upgradeSound.muted = true;
+        muteBtn.textContent = "Unmute";
+    } else {
+        clickSound.muted = false;
+        upgradeSound.muted = false;
+        muteBtn.textContent = "Mute";
+    }
+};
 
 // Floating +1 particles
 function spawnFloat(x, y, amount) {
@@ -35,8 +63,10 @@ clickBtn.onclick = (e) => {
     points += clickPower;
     counter.textContent = points;
 
-    clickSound.currentTime = 0;
-    clickSound.play();
+    if (!muted) {
+        clickSound.currentTime = 0;
+        clickSound.play();
+    }
 
     spawnFloat(e.clientX, e.clientY, clickPower);
 };
@@ -52,8 +82,10 @@ clickUpgradeBtn.onclick = () => {
         counter.textContent = points;
         clickUpgradeCostText.textContent = clickUpgradeCost;
 
-        upgradeSound.currentTime = 0;
-        upgradeSound.play();
+        if (!muted) {
+            upgradeSound.currentTime = 0;
+            upgradeSound.play();
+        }
     }
 };
 
@@ -68,8 +100,10 @@ autoClickerBtn.onclick = () => {
         counter.textContent = points;
         autoClickerCostText.textContent = autoClickerCost;
 
-        upgradeSound.currentTime = 0;
-        upgradeSound.play();
+        if (!muted) {
+            upgradeSound.currentTime = 0;
+            upgradeSound.play();
+        }
     }
 };
 
