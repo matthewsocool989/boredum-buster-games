@@ -13,7 +13,7 @@ const player = {
     speed: 7,
     alive: true,
     health: 10,
-    gunLevel: 1 // now goes up to 7
+    gunLevel: 1 // 1–7
 };
 
 // Bullets
@@ -102,7 +102,7 @@ function fireBullets() {
 
 // Spawn enemies (speed increases over time)
 function spawnEnemy() {
-    const speedBoost = difficulty.time * 0.08; // stronger scaling
+    const speedBoost = difficulty.time * 0.08;
     enemies.push({
         x: Math.random() * (canvas.width - 50),
         y: -60,
@@ -110,8 +110,8 @@ function spawnEnemy() {
         height: 50,
         alive: true,
         speed: difficulty.baseSpeed + speedBoost,
-        shootChance: 0.002,   // slower shooters
-        bulletSpeed: 4        // slower bullet travel
+        shootChance: 0.002,
+        bulletSpeed: 4
     });
 }
 
@@ -167,7 +167,6 @@ function update(timestamp) {
     difficulty.time += delta / 1000;
 
     if (gameWon) {
-        // Victory mode: fireworks + lingering explosions
         spawnFirework();
 
         fireworks.forEach(f => {
@@ -264,8 +263,8 @@ function update(timestamp) {
                 totalKills++;
                 points += 100;
 
-                // Victory at 10,000 points
-                if (points >= 10000) {
+                // Victory at 100000 points
+                if (points >= 100000) {
                     gameWon = true;
                     player.alive = false;
                     playAgainBtn.style.display = "block";
@@ -341,12 +340,17 @@ function update(timestamp) {
     requestAnimationFrame(update);
 }
 
-// Draw player ship with style changes per gun level
+// Draw player ship with evolving styles per gun level
 function drawPlayer() {
     const x = player.x;
     const y = player.y;
-    const w = player.width;
-    const h = player.height;
+    let w = player.width;
+    let h = player.height;
+
+    // Slight size increase with gun level
+    const sizeScale = 1 + (player.gunLevel - 1) * 0.05;
+    w *= sizeScale;
+    h *= sizeScale;
 
     ctx.save();
     ctx.translate(x, y);
@@ -407,6 +411,15 @@ function drawPlayer() {
     ctx.closePath();
     ctx.fill();
 
+    // Glow around ship at higher levels
+    if (player.gunLevel >= 5) {
+        ctx.strokeStyle = "rgba(0, 234, 255, 0.4)";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(0, 0, h / 1.5, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
     // Cannons increase with gun level
     ctx.fillStyle = cockpitColor;
 
@@ -419,6 +432,12 @@ function drawPlayer() {
     if (player.gunLevel >= 5) ctx.fillRect(10, -h / 2, 6, h / 4);
     if (player.gunLevel >= 6) ctx.fillRect(-20, -h / 2, 6, h / 4);
     if (player.gunLevel >= 7) ctx.fillRect(20, -h / 2, 6, h / 4);
+
+    // Thrusters that get longer with level
+    const thrusterLength = 10 + player.gunLevel * 4;
+    ctx.fillStyle = "#00eaff";
+    ctx.fillRect(-w / 4, h / 2 - 4, 8, thrusterLength);
+    ctx.fillRect(w / 4 - 8, h / 2 - 4, 8, thrusterLength);
 
     ctx.restore();
 }
