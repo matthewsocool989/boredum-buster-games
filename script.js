@@ -35,15 +35,10 @@ volumeSlider.oninput = () => {
 muteBtn.onclick = () => {
     muted = !muted;
 
-    if (muted) {
-        clickSound.muted = true;
-        upgradeSound.muted = true;
-        muteBtn.textContent = "Unmute";
-    } else {
-        clickSound.muted = false;
-        upgradeSound.muted = false;
-        muteBtn.textContent = "Mute";
-    }
+    clickSound.muted = muted;
+    upgradeSound.muted = muted;
+
+    muteBtn.textContent = muted ? "Unmute" : "Mute";
 };
 
 // Floating +1 particles
