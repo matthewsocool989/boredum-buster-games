@@ -12,20 +12,18 @@ const player = {
     height: 60,
     speed: 7,
     alive: true,
-    health: 3,
-    shield: false,
-    shieldTimer: 0
+    health: 10,          // ⭐ HEALTH LASTS LONGER
 };
 
 // Bullets
 let bullets = [];
 let enemyBullets = [];
 
-// Power-ups
-let powerUps = [];
+// Power-ups (health cubes)
+let healthCubes = [];
 
-// Special attack
-let specialReady = true;
+// Special attack (lightning auto-trigger)
+let killCount = 0;
 
 // Enemies
 let enemies = [];
@@ -59,19 +57,6 @@ document.addEventListener("keydown", e => {
     }
 });
 
-// Special attack (Shift)
-document.addEventListener("keydown", e => {
-    if (e.key === "Shift" && specialReady) {
-        specialReady = false;
-
-        enemies.forEach(e => {
-            if (e.alive) e.alive = false;
-        });
-
-        setTimeout(() => specialReady = true, 5000);
-    }
-});
-
 // Spawn enemies based on difficulty
 function spawnEnemy() {
     const speedBoost = difficulty.time * 0.02;
@@ -82,7 +67,8 @@ function spawnEnemy() {
         height: 50,
         alive: true,
         speed: difficulty.baseSpeed + speedBoost,
-        shootChance: 0.005 + difficulty.time * 0.0005
+        shootChance: 0.002,     // ⭐ SLOWER SHOOTERS
+        bulletSpeed: 4          // ⭐ SLOWER BULLET TRAVEL
     });
 }
 
@@ -121,7 +107,7 @@ function update(timestamp) {
     if (timestamp - difficulty.lastSpawn > difficulty.spawnInterval) {
         spawnEnemy();
         difficulty.lastSpawn = timestamp;
-        if (difficulty.spawnInterval > 400) difficulty.spawnInterval -= 10; // faster spawns over time
+        if (difficulty.spawnInterval > 400) difficulty.spawnInterval -= 10;
     }
 
     // Occasionally spawn background objects
@@ -140,14 +126,14 @@ function update(timestamp) {
         if (e.alive) {
             e.y += e.speed;
 
-            // Enemy shooting
+            // Enemy shooting (slower)
             if (Math.random() < e.shootChance) {
                 enemyBullets.push({
                     x: e.x,
                     y: e.y + e.height / 2,
                     width: 6,
                     height: 14,
-                    speed: 7
+                    speed: e.bulletSpeed
                 });
             }
         }
@@ -158,20 +144,8 @@ function update(timestamp) {
         o.y += o.speed;
     });
 
-    // Spawn power-ups
-    if (Math.random() < 0.004) {
-        powerUps.push({
-            x: Math.random() * canvas.width,
-            y: -20,
-            width: 24,
-            height: 24,
-            type: "shield",
-            speed: 3
-        });
-    }
-
-    // Move power-ups
-    powerUps.forEach(p => p.y += p.speed);
+    // Move health cubes
+    healthCubes.forEach(c => c.y += 3);
 
     // Bullet collision with enemies
     bullets.forEach(b => {
@@ -181,8 +155,33 @@ function update(timestamp) {
                 b.x + b.width > e.x - e.width / 2 &&
                 b.y < e.y + e.height / 2 &&
                 b.y + b.height > e.y - e.height / 2) {
+
                 e.alive = false;
                 b.y = -999;
+
+                killCount++;
+
+                // ⭐ Drop health cube sometimes
+                if (Math.random() < 0.3) {
+                    healthCubes.push({
+                        x: e.x,
+                        y: e.y,
+                        width: 20,
+                        height: 20
+                    });
+                }
+
+                // ⭐ Lightning auto-attack every 5 kills
+                if (killCount >= 5) {
+                    killCount = 0;
+                    enemies.forEach(enemy => {
+                        if (enemy.alive &&
+                            Math.abs(enemy.x - player.x) < 200 &&
+                            Math.abs(enemy.y - player.y) < 200) {
+                            enemy.alive = false;
+                        }
+                    });
+                }
             }
         });
     });
@@ -194,9 +193,7 @@ function update(timestamp) {
             b.y < player.y + player.height / 2 &&
             b.y + b.height > player.y - player.height / 2) {
 
-            if (!player.shield) {
-                player.health--;
-            }
+            player.health -= 1;   // ⭐ HEALTH REDUCES SLOWER
 
             b.y = canvas.height + 100;
 
@@ -206,27 +203,19 @@ function update(timestamp) {
         }
     });
 
-    // Power-up pickup
-    powerUps.forEach(p => {
-        if (p.x < player.x + player.width / 2 &&
-            p.x + p.width > player.x - player.width / 2 &&
-            p.y < player.y + player.height / 2 &&
-            p.y + p.height > player.y - player.height / 2) {
+    // Health cube pickup
+    healthCubes.forEach(c => {
+        if (c.x < player.x + player.width / 2 &&
+            c.x + c.width > player.x - player.width / 2 &&
+            c.y < player.y + player.height / 2 &&
+            c.y + c.height > player.y - player.height / 2) {
 
-            if (p.type === "shield") {
-                player.shield = true;
-                player.shieldTimer = 300;
-            }
+            player.health += 2;   // ⭐ HEALTH PICKUP
+            if (player.health > 10) player.health = 10;
 
-            p.y = canvas.height + 100;
+            c.y = canvas.height + 100;
         }
     });
-
-    // Shield timer
-    if (player.shield) {
-        player.shieldTimer--;
-        if (player.shieldTimer <= 0) player.shield = false;
-    }
 
     draw();
     requestAnimationFrame(update);
@@ -239,14 +228,13 @@ function drawPlayer() {
     const w = player.width;
     const h = player.height;
 
-    // Body
     ctx.save();
     ctx.translate(x, y);
 
     // Main fuselage
-    ctx.fillStyle = "#0a1a3a"; // deep navy
+    ctx.fillStyle = "#0a1a3a";
     ctx.beginPath();
-    ctx.moveTo(0, -h / 2);              // nose
+    ctx.moveTo(0, -h / 2);
     ctx.lineTo(w / 3, -h / 4);
     ctx.lineTo(w / 2, h / 4);
     ctx.lineTo(0, h / 2);
@@ -277,39 +265,10 @@ function drawPlayer() {
     ctx.closePath();
     ctx.fill();
 
-    // Twin forward cannons
+    // Cannons
     ctx.fillStyle = "#00eaff";
     ctx.fillRect(-w / 3 - 4, -h / 2, 6, h / 4);
     ctx.fillRect(w / 3 - 2, -h / 2, 6, h / 4);
-
-    // Rear engines
-    ctx.fillStyle = "#00eaff";
-    ctx.beginPath();
-    ctx.moveTo(-w / 3, h / 2);
-    ctx.lineTo(-w / 4, h / 2 + 10);
-    ctx.lineTo(-w / 5, h / 2);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.moveTo(w / 3, h / 2);
-    ctx.lineTo(w / 4, h / 2 + 10);
-    ctx.lineTo(w / 5, h / 2);
-    ctx.closePath();
-    ctx.fill();
-
-    // Shield outline
-    if (player.shield) {
-        ctx.strokeStyle = "#00eaff";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(0, -h / 2 - 8);
-        ctx.lineTo(w / 2 + 8, 0);
-        ctx.lineTo(0, h / 2 + 8);
-        ctx.lineTo(-w / 2 - 8, 0);
-        ctx.closePath();
-        ctx.stroke();
-    }
 
     ctx.restore();
 }
@@ -337,15 +296,6 @@ function drawEnemy(e) {
     ctx.arc(0, 0, h / 6, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.strokeStyle = "#00ff99";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(-w / 2, -h / 4);
-    ctx.lineTo(-w / 3, h / 2);
-    ctx.moveTo(w / 2, -h / 4);
-    ctx.lineTo(w / 3, h / 2);
-    ctx.stroke();
-
     ctx.restore();
 }
 
@@ -360,10 +310,6 @@ function drawBackgroundObject(o) {
             ctx.beginPath();
             ctx.arc(0, 0, o.size / 2, 0, Math.PI * 2);
             ctx.fill();
-            ctx.strokeStyle = "#00eaff";
-            ctx.beginPath();
-            ctx.arc(0, 0, o.size / 2 + 6, 0, Math.PI * 2);
-            ctx.stroke();
             break;
         case "asteroid":
             ctx.fillStyle = "#555555";
@@ -379,11 +325,6 @@ function drawBackgroundObject(o) {
             ctx.fillStyle = "#330022";
             ctx.beginPath();
             ctx.arc(0, 0, o.size / 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = "#ff0000";
-            ctx.beginPath();
-            ctx.arc(-o.size / 8, -o.size / 10, o.size / 12, 0, Math.PI * 2);
-            ctx.arc(o.size / 8, -o.size / 10, o.size / 12, 0, Math.PI * 2);
             ctx.fill();
             break;
         case "nebula":
@@ -427,24 +368,16 @@ function draw() {
         if (e.alive) drawEnemy(e);
     });
 
-    // Power-ups
-    ctx.fillStyle = "#00eaff";
-    powerUps.forEach(p => ctx.fillRect(p.x - p.width / 2, p.y - p.height / 2, p.width, p.height));
+    // Health cubes
+    ctx.fillStyle = "#00ff00";
+    healthCubes.forEach(c => ctx.fillRect(c.x - c.width / 2, c.y - c.height / 2, c.width, c.height));
 
     // Health bar
     ctx.fillStyle = "red";
-    ctx.fillRect(20, canvas.height - 40, 150, 20);
+    ctx.fillRect(20, canvas.height - 40, 200, 20);
 
     ctx.fillStyle = "lime";
-    ctx.fillRect(20, canvas.height - 40, 50 * player.health, 20);
-
-    // Special attack indicator
-    ctx.fillStyle = specialReady ? "#00eaff" : "gray";
-    ctx.fillRect(canvas.width - 140, canvas.height - 40, 120, 20);
-
-    ctx.fillStyle = "white";
-    ctx.font = "16px Arial";
-    ctx.fillText("SPECIAL", canvas.width - 120, canvas.height - 25);
+    ctx.fillRect(20, canvas.height - 40, 20 * player.health, 20);
 }
 
 requestAnimationFrame(update);
