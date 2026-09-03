@@ -5,6 +5,7 @@ const ctx = canvas.getContext("2d");
 const tweetSound = new Audio("tweet.mp3");
 tweetSound.volume = 0.6;
 
+// Bird settings
 let bird = {
     x: 80,
     y: 300,
@@ -13,20 +14,27 @@ let bird = {
     velocity: 0
 };
 
-let gravity = 0.4;
+// Physics
+let gravity = 0.25;       // weaker gravity
 let jumpForce = -8;
 
+// Pipes
 let pipes = [];
 let pipeGap = 150;
 let pipeWidth = 60;
 let pipeSpeed = 2;
 
+// Game state
 let score = 0;
 let gameOver = false;
 
+// Countdown system
+let gameStarted = false;
+let countdown = 3;
+
 // Spawn pipes every 2 seconds
 setInterval(() => {
-    if (!gameOver) {
+    if (!gameOver && gameStarted) {
         let topHeight = Math.random() * 300 + 50;
         let bottomY = topHeight + pipeGap;
 
@@ -38,18 +46,40 @@ setInterval(() => {
     }
 }, 2000);
 
-// Jump + sound
+// Countdown function
+function startCountdown() {
+    let interval = setInterval(() => {
+        countdown--;
+
+        if (countdown === 0) {
+            clearInterval(interval);
+            gameStarted = true;
+        }
+    }, 1000);
+}
+
+// Key controls
 document.addEventListener("keydown", () => {
-    if (!gameOver) {
-        bird.velocity = jumpForce;
 
-        // Play jump sound
-        tweetSound.currentTime = 0;
-        tweetSound.play();
-
-    } else {
-        restartGame();
+    // Start countdown on first key press
+    if (!gameStarted && countdown === 3 && !gameOver) {
+        startCountdown();
+        return;
     }
+
+    // Prevent jumping before countdown finishes
+    if (!gameStarted) return;
+
+    // Restart if game over
+    if (gameOver) {
+        restartGame();
+        return;
+    }
+
+    // Jump + sound
+    bird.velocity = jumpForce;
+    tweetSound.currentTime = 0;
+    tweetSound.play();
 });
 
 function restartGame() {
@@ -58,10 +88,16 @@ function restartGame() {
     pipes = [];
     score = 0;
     gameOver = false;
+
+    countdown = 3;
+    gameStarted = false;
 }
 
 function update() {
     if (gameOver) return;
+
+    // Freeze game until countdown finishes
+    if (!gameStarted) return;
 
     bird.velocity += gravity;
     bird.y += bird.velocity;
@@ -97,6 +133,18 @@ function update() {
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Countdown text
+    if (!gameStarted) {
+        ctx.fillStyle = "#fff";
+        ctx.font = "48px Arial";
+
+        if (countdown === 3) ctx.fillText("Ready", canvas.width / 2 - 80, canvas.height / 2);
+        if (countdown === 2) ctx.fillText("Set", canvas.width / 2 - 50, canvas.height / 2);
+        if (countdown === 1) ctx.fillText("Go!", canvas.width / 2 - 50, canvas.height / 2);
+
+        return;
+    }
 
     // Bird
     ctx.fillStyle = "yellow";
