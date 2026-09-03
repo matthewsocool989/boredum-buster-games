@@ -14,9 +14,9 @@ let bird = {
     velocity: 0
 };
 
-// Physics (updated)
-let gravity = 0.3;        // slightly heavier bird
-let jumpForce = -6.5;     // less responsive jump
+// Physics (weaker gravity + less responsive jump)
+let gravity = 0.25;
+let jumpForce = -6.5;
 
 // Pipes
 let pipes = [];
@@ -58,10 +58,10 @@ function startCountdown() {
     }, 1000);
 }
 
-// Key controls
-document.addEventListener("keydown", () => {
+// MOUSE CLICK TO JUMP
+canvas.addEventListener("mousedown", () => {
 
-    // Start countdown on first key press
+    // Start countdown on first click
     if (!gameStarted && countdown === 3 && !gameOver) {
         startCountdown();
         return;
@@ -172,7 +172,7 @@ function draw() {
         ctx.font = "40px Arial";
         ctx.fillText("GAME OVER", canvas.width / 2 - 120, canvas.height / 2);
         ctx.font = "20px Arial";
-        ctx.fillText("Press any key to restart", canvas.width / 2 - 110, canvas.height / 2 + 40);
+        ctx.fillText("Click to restart", canvas.width / 2 - 80, canvas.height / 2 + 40);
     }
 }
 
