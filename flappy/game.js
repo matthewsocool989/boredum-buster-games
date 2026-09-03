@@ -14,13 +14,13 @@ let bird = {
     velocity: 0
 };
 
-// Physics
-let gravity = 0.25;       // weaker gravity
-let jumpForce = -8;
+// Physics (updated)
+let gravity = 0.3;        // slightly heavier bird
+let jumpForce = -6.5;     // less responsive jump
 
 // Pipes
 let pipes = [];
-let pipeGap = 150;
+let pipeGap = 200;        // wider gaps
 let pipeWidth = 60;
 let pipeSpeed = 2;
 
