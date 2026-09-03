@@ -12,6 +12,9 @@ let velocity = { x: 1, y: 0 };
 let food = { x: 5, y: 5 };
 let gameOver = false;
 
+// NEW: game start flag
+let gameStarted = false;
+
 // Spawn food safely (never on the snake)
 function spawnFood() {
     let newFood;
@@ -23,7 +26,6 @@ function spawnFood() {
             y: Math.floor(Math.random() * tileCount)
         };
 
-        // Check if food is on the snake
         onSnake = snake.some(part => part.x === newFood.x && part.y === newFood.y);
     }
 
@@ -33,11 +35,23 @@ function spawnFood() {
 // Initial food placement
 spawnFood();
 
+// Input
 document.addEventListener("keydown", (e) => {
+
+    // Start game on first key press
+    if (!gameStarted) {
+        gameStarted = true;
+        return;
+    }
+
+    // Movement controls
     if (e.key === "ArrowUp" && velocity.y !== 1) velocity = { x: 0, y: -1 };
     if (e.key === "ArrowDown" && velocity.y !== -1) velocity = { x: 0, y: 1 };
     if (e.key === "ArrowLeft" && velocity.x !== 1) velocity = { x: -1, y: 0 };
     if (e.key === "ArrowRight" && velocity.x !== -1) velocity = { x: 1, y: 0 };
+
+    // Restart if game over
+    if (gameOver) resetGame();
 });
 
 function resetGame() {
@@ -45,10 +59,14 @@ function resetGame() {
     velocity = { x: 1, y: 0 };
     spawnFood();
     gameOver = false;
+    gameStarted = false;
 }
 
 function update() {
     if (gameOver) return;
+
+    // NEW: freeze game until player presses a key
+    if (!gameStarted) return;
 
     // Move snake head
     const head = {
@@ -95,6 +113,17 @@ function draw() {
     ctx.fillStyle = "red";
     ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
 
+    // NEW: Start screen message
+    if (!gameStarted && !gameOver) {
+        ctx.fillStyle = "white";
+        ctx.font = "28px Arial";
+        ctx.fillText("Press any key to start", canvas.width / 2 - 130, canvas.height / 2 - 20);
+
+        ctx.font = "20px Arial";
+        ctx.fillText("Use arrow keys to move", canvas.width / 2 - 120, canvas.height / 2 + 20);
+        return;
+    }
+
     if (gameOver) {
         ctx.fillStyle = "white";
         ctx.font = "32px Arial";
@@ -103,10 +132,6 @@ function draw() {
         ctx.fillText("Press any key to restart", canvas.width / 2 - 110, canvas.height / 2 + 40);
     }
 }
-
-document.addEventListener("keydown", () => {
-    if (gameOver) resetGame();
-});
 
 function gameLoop() {
     update();
