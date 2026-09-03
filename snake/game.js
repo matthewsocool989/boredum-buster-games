@@ -12,6 +12,27 @@ let velocity = { x: 1, y: 0 };
 let food = { x: 5, y: 5 };
 let gameOver = false;
 
+// Spawn food safely (never on the snake)
+function spawnFood() {
+    let newFood;
+    let onSnake = true;
+
+    while (onSnake) {
+        newFood = {
+            x: Math.floor(Math.random() * tileCount),
+            y: Math.floor(Math.random() * tileCount)
+        };
+
+        // Check if food is on the snake
+        onSnake = snake.some(part => part.x === newFood.x && part.y === newFood.y);
+    }
+
+    food = newFood;
+}
+
+// Initial food placement
+spawnFood();
+
 document.addEventListener("keydown", (e) => {
     if (e.key === "ArrowUp" && velocity.y !== 1) velocity = { x: 0, y: -1 };
     if (e.key === "ArrowDown" && velocity.y !== -1) velocity = { x: 0, y: 1 };
@@ -22,7 +43,7 @@ document.addEventListener("keydown", (e) => {
 function resetGame() {
     snake = [{ x: 10, y: 10 }];
     velocity = { x: 1, y: 0 };
-    food = { x: 5, y: 5 };
+    spawnFood();
     gameOver = false;
 }
 
@@ -39,10 +60,7 @@ function update() {
 
     // Eat food
     if (head.x === food.x && head.y === food.y) {
-        food = {
-            x: Math.floor(Math.random() * tileCount),
-            y: Math.floor(Math.random() * tileCount)
-        };
+        spawnFood();
     } else {
         snake.pop();
     }
