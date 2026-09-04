@@ -13,13 +13,14 @@ let gameWon = false;
 // Timer
 let time = 0;
 let timerInterval = null;
+const timerDisplay = document.getElementById("timerDisplay");
 
 // Directions for maze generation
 const DIRS = [
-    { x: 0, y: -1 }, // up
-    { x: 1, y: 0 },  // right
-    { x: 0, y: 1 },  // down
-    { x: -1, y: 0 }  // left
+    { x: 0, y: -1 },
+    { x: 1, y: 0 },
+    { x: 0, y: 1 },
+    { x: -1, y: 0 }
 ];
 
 function createGrid() {
@@ -54,7 +55,6 @@ function generateMaze() {
     while (stack.length > 0) {
         current = stack[stack.length - 1];
 
-        // Find unvisited neighbors
         let neighbors = [];
         DIRS.forEach((d, i) => {
             let nx = current.x + d.x;
@@ -68,7 +68,6 @@ function generateMaze() {
         if (neighbors.length > 0) {
             let { cell: next, dirIndex } = neighbors[Math.floor(Math.random() * neighbors.length)];
 
-            // Remove walls
             if (dirIndex === 0) {
                 current.walls.top = false;
                 next.walls.bottom = false;
@@ -144,11 +143,6 @@ function drawMaze() {
         cellSize - 12
     );
 
-    // Timer
-    ctx.fillStyle = "white";
-    ctx.font = "16px Arial";
-    ctx.fillText(`Time: ${time}s`, 10, 20);
-
     if (gameWon) {
         ctx.fillStyle = "white";
         ctx.font = "24px Arial";
@@ -183,9 +177,13 @@ document.addEventListener("keydown", (e) => {
 
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
-                if (!gameWon) time++;
+                if (!gameWon) {
+                    time++;
+                    timerDisplay.textContent = `Time: ${time}s`;
+                }
             }, 1000);
 
+            timerDisplay.textContent = `Time: ${time}s`;
             drawMaze();
         }
         return;
@@ -217,9 +215,13 @@ function start() {
 
     if (timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(() => {
-        if (!gameWon) time++;
+        if (!gameWon) {
+            time++;
+            timerDisplay.textContent = `Time: ${time}s`;
+        }
     }, 1000);
 
+    timerDisplay.textContent = `Time: ${time}s`;
     drawMaze();
 }
 

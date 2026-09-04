@@ -23,3 +23,19 @@ canvas {
     border: 3px solid #00eaff;
     border-radius: 8px;
 }
+
+/* Digital segmented font */
+@font-face {
+    font-family: 'Digital';
+    src: url('digital-font.ttf');
+}
+
+/* Timer below the maze */
+#timerDisplay {
+    margin-top: 15px;
+    font-size: 32px;
+    color: #00eaff;
+    font-family: 'Digital', monospace;
+    letter-spacing: 3px;
+    text-shadow: 0 0 10px #00eaff;
+}
