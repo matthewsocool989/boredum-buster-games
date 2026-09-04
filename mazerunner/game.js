@@ -10,6 +10,10 @@ let player = { x: 0, y: 0 };
 let exit = { x: cols - 1, y: rows - 1 };
 let gameWon = false;
 
+// Timer
+let time = 0;
+let timerInterval = null;
+
 // Directions for maze generation
 const DIRS = [
     { x: 0, y: -1 }, // up
@@ -62,20 +66,19 @@ function generateMaze() {
         });
 
         if (neighbors.length > 0) {
-            // Pick random neighbor
             let { cell: next, dirIndex } = neighbors[Math.floor(Math.random() * neighbors.length)];
 
-            // Remove walls between current and next
-            if (dirIndex === 0) { // up
+            // Remove walls
+            if (dirIndex === 0) {
                 current.walls.top = false;
                 next.walls.bottom = false;
-            } else if (dirIndex === 1) { // right
+            } else if (dirIndex === 1) {
                 current.walls.right = false;
                 next.walls.left = false;
-            } else if (dirIndex === 2) { // down
+            } else if (dirIndex === 2) {
                 current.walls.bottom = false;
                 next.walls.top = false;
-            } else if (dirIndex === 3) { // left
+            } else if (dirIndex === 3) {
                 current.walls.left = false;
                 next.walls.right = false;
             }
@@ -103,22 +106,18 @@ function drawMaze() {
             let y = cell.y * cellSize;
 
             ctx.beginPath();
-            // top
             if (cell.walls.top) {
                 ctx.moveTo(x, y);
                 ctx.lineTo(x + cellSize, y);
             }
-            // right
             if (cell.walls.right) {
                 ctx.moveTo(x + cellSize, y);
                 ctx.lineTo(x + cellSize, y + cellSize);
             }
-            // bottom
             if (cell.walls.bottom) {
                 ctx.moveTo(x, y + cellSize);
                 ctx.lineTo(x + cellSize, y + cellSize);
             }
-            // left
             if (cell.walls.left) {
                 ctx.moveTo(x, y);
                 ctx.lineTo(x, y + cellSize);
@@ -145,12 +144,21 @@ function drawMaze() {
         cellSize - 12
     );
 
+    // Timer
+    ctx.fillStyle = "white";
+    ctx.font = "16px Arial";
+    ctx.fillText(`Time: ${time}s`, 10, 20);
+
     if (gameWon) {
         ctx.fillStyle = "white";
         ctx.font = "24px Arial";
         ctx.fillText("You escaped!", canvas.width / 2 - 70, canvas.height / 2);
+
+        ctx.font = "18px Arial";
+        ctx.fillText(`Final Time: ${time}s`, canvas.width / 2 - 60, canvas.height / 2 + 30);
+
         ctx.font = "16px Arial";
-        ctx.fillText("Press R to regenerate", canvas.width / 2 - 90, canvas.height / 2 + 30);
+        ctx.fillText("Press R to regenerate", canvas.width / 2 - 90, canvas.height / 2 + 60);
     }
 }
 
@@ -171,6 +179,13 @@ document.addEventListener("keydown", (e) => {
     if (gameWon) {
         if (e.key.toLowerCase() === "r") {
             generateMaze();
+            time = 0;
+
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (!gameWon) time++;
+            }, 1000);
+
             drawMaze();
         }
         return;
@@ -198,6 +213,13 @@ document.addEventListener("keydown", (e) => {
 
 function start() {
     generateMaze();
+    time = 0;
+
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        if (!gameWon) time++;
+    }, 1000);
+
     drawMaze();
 }
 
