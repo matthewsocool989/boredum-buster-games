@@ -11,41 +11,6 @@ h1 {
     text-shadow: 0 0 10px #00eaff;
 }
 
-canvas {
-    background: #000;
-    border: 3px solid #00eaff;
-    border-radius: 8px;
-    display: block;
-    margin: 20px auto;
-}
-
-#inventory {
-    margin-top: 10px;
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-}
-
-.item {
-    padding: 8px 12px;
-    background: #222;
-    border: 2px solid #00eaff;
-    border-radius: 6px;
-    cursor: pointer;
-}
-body {
-    background: #111;
-    color: #fff;
-    text-align: center;
-    font-family: Arial, sans-serif;
-    padding: 20px;
-}
-
-h1 {
-    color: #00eaff;
-    text-shadow: 0 0 10px #00eaff;
-}
-
 .hint {
     color: #ccc;
     font-size: 14px;
@@ -58,6 +23,28 @@ h1 {
     text-align: left;
     color: #ddd;
     font-size: 14px;
+}
+
+#controls {
+    margin: 10px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+
+#controls button {
+    padding: 6px 12px;
+    background: #222;
+    border: 2px solid #00eaff;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+}
+
+#viewLabel {
+    font-size: 14px;
+    color: #00eaff;
 }
 
 canvas {
@@ -81,11 +68,8 @@ canvas {
     background: #222;
     border: 2px solid #00eaff;
     border-radius: 6px;
-    cursor: grab;
-    position: relative;
+    cursor: pointer;
 }
-
-.item.dragging {
-    opacity: 0.7;
-    cursor: grabbing;
+.item.selected {
+    border-color: #ff00aa;
 }
