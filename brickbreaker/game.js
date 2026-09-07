@@ -14,9 +14,9 @@ const ball = {
     x: canvas.width / 2,
     y: canvas.height / 2,
     radius: 8,
-    speed: 4,
-    dx: 4,
-    dy: -4
+    speed: 3,
+    dx: 3,
+    dy: -3
 };
 
 const brickRows = 5;
@@ -189,8 +189,10 @@ function resetGame() {
     paddle.x = canvas.width / 2 - paddle.width / 2;
     ball.x = canvas.width / 2;
     ball.y = canvas.height / 2;
-    ball.dx = 4;
-    ball.dy = -4;
+
+    // Slower ball (Option A)
+    ball.dx = 3;
+    ball.dy = -3;
 
     gameOver = false;
     gameWon = false;
