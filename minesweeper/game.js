@@ -193,4 +193,15 @@ function checkWin() {
     }
 }
 
+function resetGame() {
+    gameOver = false;
+    createBoard();
+}
+
+document.addEventListener("keydown", (e) => {
+    if (e.key.toLowerCase() === "r") {
+        resetGame();
+    }
+});
+
 createBoard();
