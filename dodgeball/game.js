@@ -8,6 +8,7 @@ function resizeCanvas() {
   const ratio = 4 / 3;
   const w = window.innerWidth * 0.9;
   const h = window.innerHeight * 0.8;
+
   if (w / h > ratio) {
     height = h;
     width = h * ratio;
@@ -15,48 +16,55 @@ function resizeCanvas() {
     width = w;
     height = w / ratio;
   }
+
   canvas.width = width;
   canvas.height = height;
 }
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
-const keys = {};
-window.addEventListener("keydown", e => keys[e.key] = true);
-window.addEventListener("keyup", e => keys[e.key] = false);
-
+// UI
 const scoreEl = document.getElementById("score");
 const highscoreEl = document.getElementById("highscore");
 const restartBtn = document.getElementById("restartBtn");
 
-let player, balls, startTime, gameOver, lastSpawnTime;
+// Input
+const keys = {};
+window.addEventListener("keydown", e => keys[e.key] = true);
+window.addEventListener("keyup", e => keys[e.key] = false);
+
+// Game state
+let player, balls, startTime, gameOver, lastSpawn;
 let highscore = parseFloat(localStorage.getItem("dodgeball_highscore") || "0");
 
 function resetGame() {
   player = {
     x: width / 2,
     y: height / 2,
-    size: 20,
-    speed: 4
+    size: 18,
+    speed: 4.5
   };
+
   balls = [];
   startTime = performance.now();
-  lastSpawnTime = performance.now();
+  lastSpawn = performance.now();
   gameOver = false;
 }
 resetGame();
 updateHighscoreLabel();
 
-restartBtn.addEventListener("click", () => {
-  resetGame();
-});
+restartBtn.addEventListener("click", resetGame);
+
+function updateHighscoreLabel() {
+  highscoreEl.textContent = `Best: ${highscore.toFixed(1)}s`;
+}
 
 function spawnBall() {
-  const edge = Math.floor(Math.random() * 4);
   const size = 16;
-  let x, y, vx, vy;
-
   const speed = 2 + Math.random() * 2;
+
+  const edge = Math.floor(Math.random() * 4);
+  let x, y, vx, vy;
 
   if (edge === 0) { // top
     x = Math.random() * width;
@@ -83,14 +91,10 @@ function spawnBall() {
   balls.push({ x, y, vx, vy, size });
 }
 
-function updateHighscoreLabel() {
-  highscoreEl.textContent = `Best: ${highscore.toFixed(1)}s`;
-}
-
 function update(dt) {
   if (gameOver) return;
 
-  // player movement
+  // Movement
   let dx = 0, dy = 0;
   if (keys["ArrowUp"] || keys["w"]) dy -= 1;
   if (keys["ArrowDown"] || keys["s"]) dy += 1;
@@ -105,29 +109,29 @@ function update(dt) {
     player.y += dy * player.speed;
   }
 
-  // clamp player
+  // Clamp
   player.x = Math.max(player.size, Math.min(width - player.size, player.x));
   player.y = Math.max(player.size, Math.min(height - player.size, player.y));
 
-  // spawn balls over time
+  // Spawn balls
   const now = performance.now();
-  if (now - lastSpawnTime > 1000) {
+  if (now - lastSpawn > 1000) {
     spawnBall();
-    lastSpawnTime = now;
+    lastSpawn = now;
   }
 
-  // move balls
+  // Move balls
   for (const b of balls) {
     b.x += b.vx;
     b.y += b.vy;
 
-    // bounce off walls
+    // Bounce
     if (b.x < b.size && b.vx < 0) b.vx *= -1;
     if (b.x > width - b.size && b.vx > 0) b.vx *= -1;
     if (b.y < b.size && b.vy < 0) b.vy *= -1;
     if (b.y > height - b.size && b.vy > 0) b.vy *= -1;
 
-    // collision with player
+    // Collision
     const dist = Math.hypot(b.x - player.x, b.y - player.y);
     if (dist < b.size + player.size) {
       endGame();
@@ -135,15 +139,15 @@ function update(dt) {
     }
   }
 
-  // score
+  // Score
   const elapsed = (now - startTime) / 1000;
   scoreEl.textContent = `Time: ${elapsed.toFixed(1)}s`;
 }
 
 function endGame() {
   gameOver = true;
-  const now = performance.now();
-  const elapsed = (now - startTime) / 1000;
+  const elapsed = (performance.now() - startTime) / 1000;
+
   if (elapsed > highscore) {
     highscore = elapsed;
     localStorage.setItem("dodgeball_highscore", String(highscore));
@@ -154,21 +158,19 @@ function endGame() {
 function draw() {
   ctx.clearRect(0, 0, width, height);
 
-  // player
+  // Player
   ctx.fillStyle = "#3af";
   ctx.beginPath();
   ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
   ctx.fill();
 
-  // balls
+  // Balls
   for (const b of balls) {
-    const gradient = ctx.createRadialGradient(
-      b.x, b.y, 2,
-      b.x, b.y, b.size
-    );
-    gradient.addColorStop(0, "#f0f");
-    gradient.addColorStop(1, "#a03");
-    ctx.fillStyle = gradient;
+    const g = ctx.createRadialGradient(b.x, b.y, 2, b.x, b.y, b.size);
+    g.addColorStop(0, "#f0f");
+    g.addColorStop(1, "#a03");
+    ctx.fillStyle = g;
+
     ctx.beginPath();
     ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
     ctx.fill();
@@ -177,10 +179,12 @@ function draw() {
   if (gameOver) {
     ctx.fillStyle = "rgba(0,0,0,0.6)";
     ctx.fillRect(0, 0, width, height);
+
     ctx.fillStyle = "#fff";
     ctx.textAlign = "center";
     ctx.font = "28px system-ui";
     ctx.fillText("Game Over", width / 2, height / 2 - 10);
+
     ctx.font = "18px system-ui";
     ctx.fillText("Press Restart to play again", width / 2, height / 2 + 20);
   }
@@ -190,8 +194,10 @@ let lastTime = performance.now();
 function loop(now) {
   const dt = (now - lastTime) / 1000;
   lastTime = now;
+
   update(dt);
   draw();
+
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);

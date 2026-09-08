@@ -28,6 +28,11 @@ const restartBtn = document.getElementById("restartBtn");
 let player, segments, speed, gapWidth, distance, gameOver;
 let highscore = parseInt(localStorage.getItem("hyper_tunnel_highscore") || "0", 10);
 
+// KEYBOARD INPUT
+const keys = {};
+window.addEventListener("keydown", e => keys[e.key] = true);
+window.addEventListener("keyup", e => keys[e.key] = false);
+
 function resetGame() {
   player = {
     x: width / 2,
@@ -56,15 +61,6 @@ function updateHighscoreLabel() {
   highscoreEl.textContent = `Best: ${highscore}`;
 }
 
-let inputX = player.x;
-window.addEventListener("mousemove", e => {
-  inputX = e.clientX / window.innerWidth * width;
-});
-window.addEventListener("touchmove", e => {
-  const touch = e.touches[0];
-  inputX = touch.clientX / window.innerWidth * width;
-});
-
 function spawnSegment(y) {
   const center = width / 2;
   const maxOffset = width * 0.3;
@@ -80,11 +76,14 @@ function spawnSegment(y) {
 function update(dt) {
   if (gameOver) return;
 
-  // move player toward inputX
-  const dx = inputX - player.x;
-  player.x += dx * 0.2;
+  // KEYBOARD MOVEMENT
+  let move = 0;
+  if (keys["ArrowLeft"] || keys["a"]) move -= 1;
+  if (keys["ArrowRight"] || keys["d"]) move += 1;
 
-  // clamp player
+  player.x += move * player.speed;
+
+  // clamp
   player.x = Math.max(player.radius, Math.min(width - player.radius, player.x));
 
   // move segments
@@ -108,7 +107,7 @@ function update(dt) {
 
   scoreEl.textContent = `Distance: ${Math.floor(distance)}`;
 
-  // collision: find segment near player
+  // collision detection
   for (const s of segments) {
     if (Math.abs(s.y - player.y) < 20) {
       const leftWall = s.gapCenter - s.gapWidth / 2;
