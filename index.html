@@ -118,9 +118,9 @@
     </div>
 
     <!-- LIVE COUNTER JS -->
-    <script>
-        // SET THIS TO YOUR REAL LAUNCH DATE
-        const launchDate = new Date("2024-09-01T00:00:00");
+     <script>
+        // WEBSITE LAUNCH DATE
+        const launchDate = new Date("2026-08-31T12:35:00");
 
         function updateLiveTime() {
             const now = new Date();
@@ -135,8 +135,9 @@
             const hours = totalHours % 24;
             const days = Math.floor(totalHours / 24);
 
+            // FORMAT: days:hours:minutes:seconds:centiseconds
             document.getElementById("liveTime").textContent =
-                `${days}d ${hours}h ${minutes}m ${seconds}s ${centiseconds}cs`;
+                `${days}:${hours}:${minutes}:${seconds}:${centiseconds}`;
         }
 
         setInterval(updateLiveTime, 10);
