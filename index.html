@@ -10,6 +10,11 @@
     <h1>Boredum Buster</h1>
     <p class="tagline">A growing collection of simple, fun browser games.</p>
 
+    <!-- LIVE COUNTER -->
+    <div class="live-counter">
+        Website has been live for: <span id="liveTime"></span>
+    </div>
+
     <div class="games-grid">
 
         <div class="game-card">
@@ -111,6 +116,32 @@
         </div>
 
     </div>
+
+    <!-- LIVE COUNTER JS -->
+    <script>
+        // SET THIS TO YOUR REAL LAUNCH DATE
+        const launchDate = new Date("2024-09-01T00:00:00");
+
+        function updateLiveTime() {
+            const now = new Date();
+            const diff = now - launchDate;
+
+            const centiseconds = Math.floor((diff % 1000) / 10); // 0–99
+            const totalSeconds = Math.floor(diff / 1000);
+            const seconds = totalSeconds % 60;
+            const totalMinutes = Math.floor(totalSeconds / 60);
+            const minutes = totalMinutes % 60;
+            const totalHours = Math.floor(totalMinutes / 60);
+            const hours = totalHours % 24;
+            const days = Math.floor(totalHours / 24);
+
+            document.getElementById("liveTime").textContent =
+                `${days}d ${hours}h ${minutes}m ${seconds}s ${centiseconds}cs`;
+        }
+
+        setInterval(updateLiveTime, 10);
+        updateLiveTime();
+    </script>
 
 </body>
 </html>
