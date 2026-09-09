@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>2048 Classic</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>2048</h1>
+    <div class="subtitle">Use arrow keys or swipe to combine tiles.</div>
+
+    <div class="top-bar">
+      <div class="score-box">
+        <div class="score-label">Score</div>
+        <div id="score" class="score-value">0</div>
+      </div>
+      <button class="btn" id="newGameBtn">New Game</button>
+    </div>
+
+    <div id="board" class="board"></div>
+    <div id="message" class="message"></div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
