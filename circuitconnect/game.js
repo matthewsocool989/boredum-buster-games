@@ -43,20 +43,20 @@ function initBoard() {
     board.push(row);
   }
 
-  // set start and end
+  // START TILE — now rotatable
   board[2][0].isStart = true;
-  board[2][0].connections = ["right"];
+  board[2][0].connections = ["up", "right"]; // rotatable shape
   board[2][0].rotation = 0;
 
+  // END TILE — now rotatable
   board[2][cols - 1].isEnd = true;
-  board[2][cols - 1].connections = ["left"];
+  board[2][cols - 1].connections = ["left", "down"]; // rotatable shape
   board[2][cols - 1].rotation = 0;
 
   renderBoard();
 }
 
 function rotateConnections(connections) {
-  // rotate clockwise: up->right, right->down, down->left, left->up
   return connections.map(dir => {
     if (dir === "up") return "right";
     if (dir === "right") return "down";
@@ -107,9 +107,10 @@ function renderBoard() {
 
 function onTileClick(r, c) {
   const tile = board[r][c];
-  if (tile.isStart || tile.isEnd) return;
 
+  // Start and End tiles are now rotatable — no restrictions
   tile.rotation = (tile.rotation + 1) % 4;
+
   moves++;
   movesEl.textContent = moves;
   renderBoard();
@@ -117,7 +118,6 @@ function onTileClick(r, c) {
 }
 
 function checkCircuit() {
-  // BFS from start, following connections
   const start = { r: 2, c: 0 };
   const end = { r: 2, c: cols - 1 };
 
@@ -147,7 +147,6 @@ function checkCircuit() {
       const neighborTile = board[nr][nc];
       const neighborConns = getRotatedConnections(neighborTile);
 
-      // check if neighbor has opposite connection
       const opposite =
         dir === "up" ? "down" :
         dir === "down" ? "up" :
