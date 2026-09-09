@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Circuit Connect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Circuit Connect</h1>
+    <p class="subtitle">Rotate tiles to complete the circuit from start to end.</p>
+
+    <div class="top-bar">
+      <div class="score-box">
+        <div class="score-label">Moves</div>
+        <div id="moves" class="score-value">0</div>
+      </div>
+      <button class="btn" id="newGameBtn">New Puzzle</button>
+    </div>
+
+    <div id="board" class="board"></div>
+    <div id="message" class="message"></div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
