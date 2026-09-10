@@ -61,11 +61,24 @@ function updateHighscoreLabel() {
   highscoreEl.textContent = `Best: ${highscore}`;
 }
 
+// FIX 1 + FIX 2 + FIX 4: Bigger offsets + center punishment + clamped gap
 function spawnSegment(y) {
   const center = width / 2;
-  const maxOffset = width * 0.3;
+  const maxOffset = width * 0.45;
   const offset = (Math.random() - 0.5) * maxOffset;
-  const gapCenter = center + offset;
+
+  // punish center camping
+  const playerCenterBias = Math.abs(player.x - width / 2);
+  if (playerCenterBias < width * 0.05 && Math.random() < 0.4) {
+    const side = Math.random() < 0.5 ? 0.2 : 0.8;
+    const gapCenter = width * side;
+    segments.push({ y, gapCenter, gapWidth });
+    return;
+  }
+
+  let gapCenter = center + offset;
+  gapCenter = Math.max(gapWidth / 2, Math.min(width - gapWidth / 2, gapCenter));
+
   segments.push({
     y,
     gapCenter,
@@ -86,9 +99,13 @@ function update(dt) {
   // clamp
   player.x = Math.max(player.radius, Math.min(width - player.radius, player.x));
 
-  // move segments
+  // FIX 1: horizontal wiggle
   for (const s of segments) {
     s.y += speed;
+
+    s.gapCenter += Math.sin((s.y + distance) * 0.01) * 2;
+
+    s.gapCenter = Math.max(gapWidth / 2, Math.min(width - gapWidth / 2, s.gapCenter));
   }
 
   // remove off-screen segments and add new
@@ -97,13 +114,17 @@ function update(dt) {
     spawnSegment(segments[segments.length - 1].y - 80);
   }
 
-  // difficulty ramp
+  // FIX 3: faster difficulty ramp
   distance += speed * dt;
-  if (distance > 500 && gapWidth > width * 0.25) gapWidth = width * 0.3;
-  if (distance > 1000 && gapWidth > width * 0.22) gapWidth = width * 0.26;
-  if (distance > 2000 && gapWidth > width * 0.18) gapWidth = width * 0.22;
-  if (distance > 3000 && speed < 7) speed = 5.5;
-  if (distance > 5000 && speed < 9) speed = 7;
+
+  if (distance > 300 && gapWidth > width * 0.28) gapWidth = width * 0.28;
+  if (distance > 800 && gapWidth > width * 0.22) gapWidth = width * 0.22;
+  if (distance > 1500 && gapWidth > width * 0.18) gapWidth = width * 0.18;
+  if (distance > 2500 && gapWidth > width * 0.14) gapWidth = width * 0.14;
+
+  if (distance > 2000 && speed < 6) speed = 6;
+  if (distance > 4000 && speed < 8) speed = 8;
+  if (distance > 6000 && speed < 10) speed = 10;
 
   scoreEl.textContent = `Distance: ${Math.floor(distance)}`;
 
@@ -130,6 +151,7 @@ function endGame() {
   }
 }
 
+// FIX 5: diagonal segments
 function draw() {
   ctx.clearRect(0, 0, width, height);
 
@@ -143,16 +165,27 @@ function draw() {
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, width, height);
 
-  // segments
+  // segments (tilted)
   for (const s of segments) {
+    ctx.save();
+    ctx.translate(0, s.y);
+    ctx.rotate(0.03);
+
     ctx.strokeStyle = "#3af";
     ctx.lineWidth = 6;
     ctx.beginPath();
-    ctx.moveTo(0, s.y);
-    ctx.lineTo(s.gapCenter - s.gapWidth / 2, s.y);
-    ctx.moveTo(s.gapCenter + s.gapWidth / 2, s.y);
-    ctx.lineTo(width, s.y);
+
+    const leftWall = s.gapCenter - s.gapWidth / 2;
+    const rightWall = s.gapCenter + s.gapWidth / 2;
+
+    ctx.moveTo(0, 0);
+    ctx.lineTo(leftWall, 0);
+
+    ctx.moveTo(rightWall, 0);
+    ctx.lineTo(width, 0);
+
     ctx.stroke();
+    ctx.restore();
   }
 
   // player
