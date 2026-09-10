@@ -41,7 +41,7 @@ function resetGame() {
     speed: 6
   };
   segments = [];
-  speed = 4;
+  speed = 2;
   gapWidth = width * 0.35; // nice and generous at start
   distance = 0;
   gameOver = false;
