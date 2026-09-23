@@ -18,8 +18,8 @@ const laneWidth = 120; // distance allowed from centerline before penalty
 
 function resetGame() {
   car = {
-    x: WIDTH * 0.5,
-    y: HEIGHT * 0.7,
+    x: 500, // world coordinates
+    y: 900,
     angle: -Math.PI / 2,
     speed: 0,
     maxSpeed: 4,
@@ -41,27 +41,30 @@ function resetGame() {
 }
 
 function createTrack() {
-  // simple rectangular loop with rounded corners
+  // WORLD SIZE (bigger than screen)
+  const worldWidth = 2000;
+  const worldHeight = 1400;
+
   const outer = [
-    { x: 80, y: 60 },
-    { x: WIDTH - 80, y: 60 },
-    { x: WIDTH - 80, y: HEIGHT - 60 },
-    { x: 80, y: HEIGHT - 60 }
+    { x: 200, y: 200 },
+    { x: worldWidth - 200, y: 200 },
+    { x: worldWidth - 200, y: worldHeight - 200 },
+    { x: 200, y: worldHeight - 200 }
   ];
 
   const inner = outer.map(p => ({
-    x: p.x + 80 * Math.sign(p.x - WIDTH / 2),
-    y: p.y + 40 * Math.sign(p.y - HEIGHT / 2)
+    x: p.x + 150 * Math.sign(p.x - worldWidth / 2),
+    y: p.y + 80 * Math.sign(p.y - worldHeight / 2)
   }));
 
   const checkpoints = [
-    { x: WIDTH * 0.5, y: HEIGHT * 0.2 },
-    { x: WIDTH * 0.8, y: HEIGHT * 0.5 },
-    { x: WIDTH * 0.5, y: HEIGHT * 0.8 },
-    { x: WIDTH * 0.2, y: HEIGHT * 0.5 }
+    { x: worldWidth * 0.5, y: 300 },
+    { x: worldWidth - 300, y: worldHeight * 0.5 },
+    { x: worldWidth * 0.5, y: worldHeight - 300 },
+    { x: 300, y: worldHeight * 0.5 }
   ];
 
-  return { outer, inner, checkpoints };
+  return { outer, inner, checkpoints, worldWidth, worldHeight };
 }
 
 function update(dt) {
@@ -92,7 +95,7 @@ function update(dt) {
   car.x += Math.cos(car.angle) * car.speed;
   car.y += Math.sin(car.angle) * car.speed;
 
-  // lane departure sensor (distance from centerline checkpoint)
+  // lane departure sensor
   const cp = track.checkpoints[car.checkpointIndex];
   const dxLane = car.x - cp.x;
   const dyLane = car.y - cp.y;
@@ -100,11 +103,6 @@ function update(dt) {
 
   if (distLane > laneWidth) {
     car.speed *= 0.97; // off-lane penalty
-  }
-
-  // off-track slowdown
-  if (!pointOnTrack(car.x, car.y, track)) {
-    car.speed *= 0.95;
   }
 
   // checkpoint / lap logic
@@ -134,35 +132,26 @@ function update(dt) {
   lapTimeEl.textContent = `Lap: ${lapTime.toFixed(2)}s`;
 }
 
-function pointOnTrack(x, y, track) {
-  // approximate: inside outer polygon and outside inner polygon
-  return insideRect(x, y, 80, 60, WIDTH - 80, HEIGHT - 60) &&
-         !insideRect(x, y, WIDTH * 0.5 - 120, HEIGHT * 0.5 - 60, WIDTH * 0.5 + 120, HEIGHT * 0.5 + 60);
-}
-
-function insideRect(x, y, x1, y1, x2, y2) {
-  return x > x1 && x < x2 && y > y1 && y < y2;
-}
-
-function drawTrack() {
+function drawTrack(cameraX, cameraY) {
   ctx.fillStyle = "#222";
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  // road
+  // road outer
   ctx.fillStyle = "#333";
   ctx.beginPath();
-  ctx.moveTo(track.outer[0].x, track.outer[0].y);
+  ctx.moveTo(track.outer[0].x - cameraX, track.outer[0].y - cameraY);
   for (let i = 1; i < track.outer.length; i++) {
-    ctx.lineTo(track.outer[i].x, track.outer[i].y);
+    ctx.lineTo(track.outer[i].x - cameraX, track.outer[i].y - cameraY);
   }
   ctx.closePath();
   ctx.fill();
 
+  // road inner
   ctx.fillStyle = "#000";
   ctx.beginPath();
-  ctx.moveTo(track.inner[0].x, track.inner[0].y);
+  ctx.moveTo(track.inner[0].x - cameraX, track.inner[0].y - cameraY);
   for (let i = 1; i < track.inner.length; i++) {
-    ctx.lineTo(track.inner[i].x, track.inner[i].y);
+    ctx.lineTo(track.inner[i].x - cameraX, track.inner[i].y - cameraY);
   }
   ctx.closePath();
   ctx.fill();
@@ -171,7 +160,7 @@ function drawTrack() {
   ctx.fillStyle = "#ffcc00";
   for (const cp of track.checkpoints) {
     ctx.beginPath();
-    ctx.arc(cp.x, cp.y, 4, 0, Math.PI * 2);
+    ctx.arc(cp.x - cameraX, cp.y - cameraY, 4, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -179,14 +168,14 @@ function drawTrack() {
   ctx.strokeStyle = "#fff";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(WIDTH * 0.5 - 20, HEIGHT * 0.2 - 10);
-  ctx.lineTo(WIDTH * 0.5 + 20, HEIGHT * 0.2 + 10);
+  ctx.moveTo(track.checkpoints[0].x - 20 - cameraX, track.checkpoints[0].y - 10 - cameraY);
+  ctx.lineTo(track.checkpoints[0].x + 20 - cameraX, track.checkpoints[0].y + 10 - cameraY);
   ctx.stroke();
 }
 
 function drawCar() {
   ctx.save();
-  ctx.translate(car.x, car.y);
+  ctx.translate(WIDTH / 2, HEIGHT / 2);
   ctx.rotate(car.angle);
 
   ctx.fillStyle = "#3af";
@@ -199,7 +188,11 @@ function drawCar() {
 }
 
 function draw() {
-  drawTrack();
+  // camera centers on car
+  const cameraX = car.x - WIDTH / 2;
+  const cameraY = car.y - HEIGHT / 2;
+
+  drawTrack(cameraX, cameraY);
   drawCar();
 }
 
