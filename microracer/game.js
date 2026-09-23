@@ -14,6 +14,8 @@ window.addEventListener("keyup", e => keys[e.key] = false);
 
 let car, track, lastTime, lapStartTime, bestLap, gameRunning;
 
+const laneWidth = 120; // distance allowed from centerline before penalty
+
 function resetGame() {
   car = {
     x: WIDTH * 0.5,
@@ -47,7 +49,10 @@ function createTrack() {
     { x: 80, y: HEIGHT - 60 }
   ];
 
-  const inner = outer.map(p => ({ x: p.x + 80 * Math.sign(p.x - WIDTH / 2), y: p.y + 40 * Math.sign(p.y - HEIGHT / 2) }));
+  const inner = outer.map(p => ({
+    x: p.x + 80 * Math.sign(p.x - WIDTH / 2),
+    y: p.y + 40 * Math.sign(p.y - HEIGHT / 2)
+  }));
 
   const checkpoints = [
     { x: WIDTH * 0.5, y: HEIGHT * 0.2 },
@@ -87,29 +92,46 @@ function update(dt) {
   car.x += Math.cos(car.angle) * car.speed;
   car.y += Math.sin(car.angle) * car.speed;
 
-  // simple off-track slowdown
+  // lane departure sensor (distance from centerline checkpoint)
+  const cp = track.checkpoints[car.checkpointIndex];
+  const dxLane = car.x - cp.x;
+  const dyLane = car.y - cp.y;
+  const distLane = Math.sqrt(dxLane * dxLane + dyLane * dyLane);
+
+  if (distLane > laneWidth) {
+    car.speed *= 0.97; // off-lane penalty
+  }
+
+  // off-track slowdown
   if (!pointOnTrack(car.x, car.y, track)) {
     car.speed *= 0.95;
   }
 
-  // checkpoints / lap timing
-  const cp = track.checkpoints[car.checkpointIndex];
+  // checkpoint / lap logic
   const dx = car.x - cp.x;
   const dy = car.y - cp.y;
   if (dx * dx + dy * dy < 900) {
     car.checkpointIndex++;
     if (car.checkpointIndex >= track.checkpoints.length) {
       car.checkpointIndex = 0;
+
       const now = performance.now();
       const lapTime = (now - lapStartTime) / 1000;
       lapStartTime = now;
+
       lapTimeEl.textContent = `Lap: ${lapTime.toFixed(2)}s`;
+
       if (!bestLap || lapTime < bestLap) {
         bestLap = lapTime;
         bestTimeEl.textContent = `Best: ${bestLap.toFixed(2)}s`;
       }
     }
   }
+
+  // update lap timer every frame
+  const now = performance.now();
+  const lapTime = (now - lapStartTime) / 1000;
+  lapTimeEl.textContent = `Lap: ${lapTime.toFixed(2)}s`;
 }
 
 function pointOnTrack(x, y, track) {
@@ -145,7 +167,7 @@ function drawTrack() {
   ctx.closePath();
   ctx.fill();
 
-  // checkpoints (small markers)
+  // checkpoints
   ctx.fillStyle = "#ffcc00";
   for (const cp of track.checkpoints) {
     ctx.beginPath();
