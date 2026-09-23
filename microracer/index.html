@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MicroRacer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div id="container">
+    <h1>MicroRacer</h1>
+
+    <div id="hud">
+      <span id="lapTime">Lap: 0.00s</span>
+      <span id="bestTime">Best: --</span>
+    </div>
+
+    <canvas id="game" width="640" height="360"></canvas>
+
+    <p class="controls">
+      Controls: A / D = Steer, W / Up = Accelerate, S / Down = Brake
+    </p>
+
+    <button id="restartBtn">Restart</button>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
